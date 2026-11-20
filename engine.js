@@ -748,7 +748,7 @@
     const warnings = [];
     const effGroups = Math.max(2, Math.min(Number(cfg.groupCount) || 2, Math.floor(active.length / 2) || 2));
     if (active.length < 4) {
-      warnings.push('그룹전(단체전)을 진행하려면 최소 4명(2그룹 × 2명) 이상 필요합니다.');
+      warnings.push('단체전을 진행하려면 최소 4명(2그룹 × 2명) 이상 필요합니다.');
       return { groups: [], ties: [], warnings };
     }
     if (effGroups < cfg.groupCount) {

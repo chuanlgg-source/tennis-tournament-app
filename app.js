@@ -51,6 +51,9 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.tournaments) && parsed.tournaments.length > 0) {
+          parsed.tournaments.forEach((tr) => {
+            if (tr.name === '클럽 대항 그룹전') tr.name = '클럽 대항 단체전';
+          });
           state.tournaments = parsed.tournaments;
           state.activeTournamentId = parsed.activeTournamentId || parsed.tournaments[0].id;
           return;
@@ -70,7 +73,7 @@
     switch (type) {
       case 'tournament': return { icon: 'emoji_events', label: '토너먼트' };
       case 'individual': return { icon: 'sync_alt', label: '개인전(KDK)' };
-      case 'group': return { icon: 'shield', label: '그룹전(단체)' };
+      case 'group': return { icon: 'shield', label: '단체전' };
       case 'event': return { icon: 'bolt', label: '이벤트' };
       default: return { icon: 'sports_tennis', label: '대회' };
     }
@@ -170,7 +173,7 @@
     }
 
     const t3 = createTournamentObject({
-      name: '클럽 대항 그룹전',
+      name: '클럽 대항 단체전',
       type: 'group',
       players: makeSampleRoster(12),
       config: { teamMode: 'mixed', groupCount: 2, gamesPerTie: 3, matchFormat: '6game-noad' },
@@ -633,7 +636,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-top">
-            <span class="metric-label">불참/돌발</span>
+            <span class="metric-label">불참/부상</span>
             <span class="material-symbols-outlined" style="font-size:17px;color:var(--primary);">health_and_safety</span>
           </div>
           <div class="metric-val">${t.players.length - activeP.length}명</div>
@@ -736,7 +739,7 @@
                   </select>
                   ${w
                     ? `<button class="btn btn-soft btn-sm" data-action="restore-player" data-pid="${p.id}">복귀</button>`
-                    : `<button class="icon-btn" style="width:32px;height:32px;" data-action="open-incident" data-pid="${p.id}" title="불참/대체"><span class="material-symbols-outlined" style="font-size:18px;">swap_horiz</span></button>`}
+                    : `<button class="icon-btn" style="width:32px;height:32px;" data-action="open-incident" data-pid="${p.id}" title="불참/부상 대체"><span class="material-symbols-outlined" style="font-size:18px;">swap_horiz</span></button>`}
                   <button class="icon-btn" style="width:32px;height:32px;color:var(--error);" data-action="remove-player" data-pid="${p.id}" title="삭제">
                     <span class="material-symbols-outlined" style="font-size:18px;">close</span>
                   </button>
@@ -764,7 +767,7 @@
     const types = [
       { id: 'tournament', icon: 'emoji_events', title: '토너먼트', sub: '그룹별 브래킷 + BYE 자동' },
       { id: 'individual', icon: 'sync_alt', title: '개인전(KDK)', sub: '파트너 교체 복식 로테이션' },
-      { id: 'group', icon: 'shield', title: '그룹전(단체)', sub: '균등 배분 + 대표 오더 입력' },
+      { id: 'group', icon: 'shield', title: '단체전', sub: '균등 배분 + 대표 오더 입력' },
       { id: 'event', icon: 'bolt', title: '이벤트 매치', sub: '자유 친선 · 타이브레이크' },
     ];
 
@@ -1267,7 +1270,7 @@
                 <select id="nt-type" class="select">
                   <option value="tournament">토너먼트 (그룹별 브래킷)</option>
                   <option value="individual">개인전 (KDK 파트너 교체)</option>
-                  <option value="group">그룹전 (단체전 · 대표 오더)</option>
+                  <option value="group">단체전 (대표 오더)</option>
                   <option value="event">이벤트 (자유 친선 · 타이브레이크)</option>
                 </select>
               </div>
@@ -1320,7 +1323,7 @@
         <div class="modal-backdrop" data-action="close-modal-backdrop">
           <div class="modal-sheet">
             <div class="modal-head">
-              <h3 class="modal-title">갑작스런 불참 / 대체 처리</h3>
+              <h3 class="modal-title">불참 · 부상 / 대체 처리</h3>
               <button class="icon-btn" data-action="close-modal"><span class="material-symbols-outlined">close</span></button>
             </div>
             <div class="field" style="margin-bottom:12px;">

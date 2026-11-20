@@ -1,0 +1,4377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CourtFlow — 테니스 복식 대회 운영 매니저</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <style>
+/* CourtFlow — Tennis Doubles Tournament Manager Stylesheet */
+:root {
+  --bg-canvas: #f7f6f1;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1efe7;
+  --bg-hover: #faf9f5;
+
+  --court-green: #134e35;
+  --court-green-hover: #0d3b27;
+  --court-green-soft: #e7f3ed;
+  --court-green-border: #b7decb;
+
+  --clay: #c85a32;
+  --clay-soft: #fdf0ea;
+  --clay-border: #f5cbb8;
+
+  --lime-accent: #84cc16;
+  --lime-soft: #f2fce2;
+
+  --ink-primary: #18211c;
+  --ink-secondary: #4e5d54;
+  --ink-muted: #7f8d84;
+
+  --border: #e3e0d5;
+  --border-strong: #cfcbb9;
+
+  --men-bg: #eff6ff;
+  --men-text: #1d4ed8;
+  --men-border: #bfdbfe;
+
+  --women-bg: #fdf2f8;
+  --women-text: #be185d;
+  --women-border: #fbcfe8;
+
+  --mixed-bg: #fff7ed;
+  --mixed-text: #c2410c;
+  --mixed-border: #fed7aa;
+
+  --danger-bg: #fef2f2;
+  --danger-text: #dc2626;
+  --danger-border: #fecaca;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(19, 78, 53, 0.05);
+  --shadow-md: 0 6px 20px rgba(24, 33, 28, 0.06);
+
+  --font-display: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Noto Sans KR', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Top Header */
+.app-header {
+  background: var(--court-green);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.header-top {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.brand-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.72);
+  margin-top: 1px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Tournament Tabs Bar (Requirement #8) */
+.tournament-tabs-bar {
+  background: rgba(0, 0, 0, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tournament-tabs-inner {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 8px 24px 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.t-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  padding: 9px 14px;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.t-tab:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.t-tab.active {
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-weight: 700;
+  border-color: var(--border);
+}
+
+.t-tab-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-tab.active .t-tab-badge {
+  background: var(--court-green-soft);
+  color: var(--court-green);
+}
+
+.t-tab-add {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-bottom: none;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.t-tab-add:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Main Workspace Container */
+.main-container {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 22px 24px 64px;
+}
+
+/* Tournament Summary Header */
+.tournament-banner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.tournament-banner-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tournament-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tournament-name-input {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 6px;
+  min-width: 200px;
+}
+
+.tournament-name-input:hover,
+.tournament-name-input:focus {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+  outline: none;
+}
+
+.tournament-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.tournament-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 92px;
+}
+
+.stat-chip-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.stat-chip-val {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section Sub-tabs */
+.section-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  overflow-x: auto;
+}
+
+.sec-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-secondary);
+  padding: 8px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.sec-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--ink-primary);
+}
+
+.sec-btn.active {
+  background: var(--court-green);
+  color: #ffffff;
+}
+
+.sec-step {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.sec-btn.active .sec-step {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--ink-primary);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--bg-subtle);
+  border-color: #b8b39e;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--court-green);
+  border-color: var(--court-green);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--court-green-hover);
+  border-color: var(--court-green-hover);
+}
+
+.btn-clay {
+  background: var(--clay);
+  border-color: var(--clay);
+  color: #ffffff;
+}
+
+.btn-clay:hover {
+  background: #ad4925;
+  border-color: #ad4925;
+}
+
+.btn-ghost-light {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.btn-ghost-light:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-danger-soft {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.btn-danger-soft:hover {
+  background: #fee2e2;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Cards & Grid */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.card-desc {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 960px) {
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Forms */
+.form-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 130px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+
+.input, .select {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--ink-primary);
+  font-size: 13.5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: var(--court-green);
+  box-shadow: 0 0 0 3px rgba(19, 78, 53, 0.12);
+}
+
+/* Badges & Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-men { background: var(--men-bg); color: var(--men-text); border-color: var(--men-border); }
+.badge-women { background: var(--women-bg); color: var(--women-text); border-color: var(--women-border); }
+.badge-mixed { background: var(--mixed-bg); color: var(--mixed-text); border-color: var(--mixed-border); }
+.badge-green { background: var(--court-green-soft); color: var(--court-green); border-color: var(--court-green-border); }
+.badge-clay { background: var(--clay-soft); color: var(--clay); border-color: var(--clay-border); }
+.badge-danger { background: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+.badge-neutral { background: var(--bg-subtle); color: var(--ink-secondary); border-color: var(--border); }
+
+/* Callout / Warnings */
+.alert {
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.alert-warn {
+  background: var(--clay-soft);
+  border: 1px solid var(--clay-border);
+  color: #7c2d12;
+}
+
+.alert-info {
+  background: var(--court-green-soft);
+  border: 1px solid var(--court-green-border);
+  color: var(--court-green);
+}
+
+/* Tables */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+th {
+  background: var(--bg-subtle);
+  color: var(--ink-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: var(--bg-hover);
+}
+
+tr.row-withdrawn td {
+  opacity: 0.55;
+  text-decoration: line-through;
+  background: #fafafa;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.center {
+  text-align: center;
+}
+
+/* Option Selector Cards (Tournament Type, Team Mode) */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.choice-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.choice-card:hover {
+  border-color: var(--court-green-border);
+  background: var(--bg-hover);
+}
+
+.choice-card.selected {
+  border-color: var(--court-green);
+  background: var(--court-green-soft);
+}
+
+.choice-card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-primary);
+  margin-bottom: 3px;
+}
+
+.choice-card-sub {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  line-height: 1.4;
+}
+
+/* Visual Tournament Bracket */
+.bracket-scroll {
+  overflow-x: auto;
+  padding: 12px 4px 18px;
+}
+
+.bracket-grid {
+  display: flex;
+  gap: 28px;
+  align-items: stretch;
+  min-width: max-content;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  width: 265px;
+  flex-shrink: 0;
+}
+
+.bracket-round-title {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--court-green);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--court-green-soft);
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.bracket-matches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+  gap: 14px;
+}
+
+.bracket-match {
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.bracket-match.is-completed {
+  border-color: var(--court-green-border);
+}
+
+.bracket-match.is-bye {
+  border-style: dashed;
+  opacity: 0.82;
+}
+
+.bm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bm-row:last-of-type {
+  border-bottom: none;
+}
+
+.bm-row.is-winner {
+  background: var(--lime-soft);
+  font-weight: 700;
+}
+
+.bm-team {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bm-team.empty {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.bm-score-input {
+  width: 44px;
+  padding: 4px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  background: #ffffff;
+}
+
+.bm-score-input:focus {
+  outline: none;
+  border-color: var(--court-green);
+}
+
+.bm-footer {
+  background: var(--bg-subtle);
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Match Cards (Individual / Group / Event) */
+.match-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .match-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.match-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.match-card.completed {
+  border-color: var(--court-green-border);
+  background: #fcfefd;
+}
+
+.match-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.match-versus {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.mv-side {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+}
+
+.mv-side.winner {
+  background: var(--lime-soft);
+  border: 1px solid #bef264;
+}
+
+.mv-names {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+
+.mv-center {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.score-box {
+  width: 46px;
+  height: 36px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  background: #ffffff;
+}
+
+.score-box:focus {
+  outline: none;
+  border-color: var(--court-green);
+}
+
+/* Group Captain Lineup Box */
+.lineup-row {
+  display: grid;
+  grid-template-columns: 74px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.lineup-row:last-child {
+  border-bottom: none;
+}
+
+/* Rank Medal */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12.5px;
+  background: var(--bg-subtle);
+  color: var(--ink-secondary);
+}
+
+.rank-1 { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+.rank-2 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.rank-3 { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 28, 22, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-box {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  max-width: 540px;
+  width: 100%;
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* Dropzone for Excel */
+.dropzone {
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  text-align: center;
+  background: var(--bg-hover);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--court-green);
+  background: var(--court-green-soft);
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--ink-primary);
+  color: #ffffff;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 0.2s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ink-muted);
+}
+
+.empty-state-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+/**
+ * CourtFlow Tennis Doubles Tournament Engine (Pure JS, UMD-compatible)
+ * Handles:
+ *  - Skill tier presets & custom weights
+ *  - Doubles pairing with gender/skill balancing & mixed-overflow handling
+ *  - Tournament bracket generation (with ITF/KTA standard BYE placement & auto-advance)
+ *  - Individual (KDK-style partner rotation) doubles scheduling with odd-player fairness
+ *  - Group (Team match) snake-draft balancing, optimal game count recommendation, & captain lineups
+ *  - Event (Ad-hoc / Random / Tiebreak) match generation
+ *  - Incident management (sudden withdrawal, substitution, walkover, rematch)
+ *  - Official scoring & tie-breakers: Win +1, Draw 0, Loss -1; Tie-breaker: Total Score -> Diff -> Wins
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.TennisEngine = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SKILL_PRESETS = {
+    abcde: {
+      id: 'abcde',
+      name: '동호인 등급 (A ~ E)',
+      levels: [
+        { code: 'A', label: 'A (최상급)', weight: 5 },
+        { code: 'B', label: 'B (상급)', weight: 4 },
+        { code: 'C', label: 'C (중급)', weight: 3 },
+        { code: 'D', label: 'D (초중급)', weight: 2 },
+        { code: 'E', label: 'E (입문/초급)', weight: 1 },
+      ],
+    },
+    ntrp: {
+      id: 'ntrp',
+      name: 'NTRP (2.0 ~ 5.0)',
+      levels: [
+        { code: '5.0', label: 'NTRP 5.0', weight: 7 },
+        { code: '4.5', label: 'NTRP 4.5', weight: 6 },
+        { code: '4.0', label: 'NTRP 4.0', weight: 5 },
+        { code: '3.5', label: 'NTRP 3.5', weight: 4 },
+        { code: '3.0', label: 'NTRP 3.0', weight: 3 },
+        { code: '2.5', label: 'NTRP 2.5', weight: 2 },
+        { code: '2.0', label: 'NTRP 2.0', weight: 1 },
+      ],
+    },
+    medal: {
+      id: 'medal',
+      name: '금·은·동·신인배',
+      levels: [
+        { code: '금배', label: '금배 (오픈)', weight: 4 },
+        { code: '은배', label: '은배 (상급)', weight: 3 },
+        { code: '동배', label: '동배 (중급)', weight: 2 },
+        { code: '신인', label: '신인부 (초급)', weight: 1 },
+      ],
+    },
+  };
+
+  const MATCH_FORMATS = {
+    '6game-noad': { id: '6game-noad', label: '6게임 1세트 (노애드, 5:5 타이브레이크)', targetScore: 6, allowDraw: false, walkoverScore: 6 },
+    '6game-draw': { id: '6game-draw', label: '6게임 1세트 (노애드, 5:5 무승부)', targetScore: 6, allowDraw: true, walkoverScore: 6 },
+    '4game-noad': { id: '4game-noad', label: '4게임 단축세트 (노애드, 3:3 타이브레이크)', targetScore: 4, allowDraw: false, walkoverScore: 4 },
+    '4game-draw': { id: '4game-draw', label: '4게임 단축세트 (노애드, 3:3 무승부)', targetScore: 4, allowDraw: true, walkoverScore: 4 },
+    '8game-pro': { id: '8game-pro', label: '8게임 프로세트 (7:7 타이브레이크)', targetScore: 8, allowDraw: false, walkoverScore: 8 },
+    'tb-7': { id: 'tb-7', label: '7점 타이브레이크 이벤트', targetScore: 7, allowDraw: false, walkoverScore: 7 },
+    'tb-10': { id: 'tb-10', label: '10점 슈퍼타이브레이크 이벤트', targetScore: 10, allowDraw: false, walkoverScore: 10 },
+    'one-point': { id: 'one-point', label: '원포인트 (1점 서든데스)', targetScore: 1, allowDraw: false, walkoverScore: 1 },
+  };
+
+  function uid(prefix) {
+    return (prefix || 'id') + '_' + Math.random().toString(36).slice(2, 9) + '_' + Date.now().toString(36).slice(-4);
+  }
+
+  function getSkillWeight(skillCode, levels) {
+    if (!levels || !levels.length) return 3;
+    const found = levels.find((l) => String(l.code).toUpperCase() === String(skillCode).toUpperCase());
+    if (found) return Number(found.weight) || 1;
+    // Fallback numeric parse (e.g. NTRP 3.5)
+    const num = parseFloat(skillCode);
+    if (!isNaN(num)) return num;
+    return 1;
+  }
+
+  function normalizeGender(val) {
+    const s = String(val || '').trim().toUpperCase();
+    if (['M', 'MALE', '남', '남성', '남자', 'MAN'].includes(s)) return 'M';
+    if (['F', 'FEMALE', '여', '여성', '여자', 'WOMAN', 'W'].includes(s)) return 'F';
+    return 'M';
+  }
+
+  function genderLabel(g) {
+    return g === 'F' ? '여성' : '남성';
+  }
+
+  function teamTypeLabel(t) {
+    if (t === 'men') return '남성복식';
+    if (t === 'women') return '여성복식';
+    if (t === 'mixed') return '혼성복식';
+    return '자유복식';
+  }
+
+  function getActivePlayers(players) {
+    return (players || []).filter((p) => p.status !== 'withdrawn');
+  }
+
+  /**
+   * Pair players into Doubles Teams according to teamMode ('men' | 'women' | 'mixed')
+   * and pairingStrategy ('balanced' | 'similar').
+   * Flexibly handles odd counts & gender imbalance without crashing:
+   * - If teamMode is 'men' or 'women', pairs matching gender first; if unmatched players remain
+   *   and opposite gender players exist in the pool, creates flexible 'mixed-overflow' teams and logs warnings.
+   * - If an odd 1 player remains overall, returns them in `unpaired` with actionable notice.
+   */
+  function buildDoublesTeams(players, options) {
+    const opts = Object.assign({
+      teamMode: 'mixed', // 'men' | 'women' | 'mixed'
+      pairingStrategy: 'balanced', // 'balanced' (high+low) | 'similar' (high+high)
+      levels: SKILL_PRESETS.abcde.levels,
+      allowMixedOverflow: true,
+    }, options || {});
+
+    const active = getActivePlayers(players).map((p) => ({
+      ...p,
+      _w: getSkillWeight(p.skill, opts.levels),
+    }));
+
+    const men = active.filter((p) => p.gender === 'M').sort((a, b) => b._w - a._w);
+    const women = active.filter((p) => p.gender === 'F').sort((a, b) => b._w - a._w);
+
+    const teams = [];
+    const warnings = [];
+    const leftovers = [];
+
+    function pairSameList(list, divisionTag, strategy) {
+      const arr = list.slice();
+      while (arr.length >= 2) {
+        let p1, p2;
+        if (strategy === 'balanced') {
+          p1 = arr.shift(); // strongest
+          p2 = arr.pop();   // weakest
+        } else {
+          p1 = arr.shift();
+          p2 = arr.shift();
+        }
+        teams.push(makeTeam(p1, p2, divisionTag, false));
+      }
+      return arr; // 0 or 1 leftover
+    }
+
+    function makeTeam(p1, p2, division, isOverflow) {
+      const actualDiv =
+        p1.gender === 'M' && p2.gender === 'M'
+          ? 'men'
+          : p1.gender === 'F' && p2.gender === 'F'
+          ? 'women'
+          : 'mixed';
+      return {
+        id: uid('team'),
+        name: `${p1.name} / ${p2.name}`,
+        players: [p1.id, p2.id],
+        playerDetails: [
+          { id: p1.id, name: p1.name, gender: p1.gender, skill: p1.skill, weight: p1._w },
+          { id: p2.id, name: p2.name, gender: p2.gender, skill: p2.skill, weight: p2._w },
+        ],
+        division: actualDiv,
+        requestedDivision: division,
+        isMixedOverflow: Boolean(isOverflow),
+        avgWeight: Number(((p1._w + p2._w) / 2).toFixed(2)),
+        totalWeight: p1._w + p2._w,
+      };
+    }
+
+    if (opts.teamMode === 'men') {
+      const remM = pairSameList(men, 'men', opts.pairingStrategy);
+      let remW = women.slice();
+      if (remW.length > 0) {
+        warnings.push(`남성복식 설정이지만 여성 참가자 ${remW.length}명이 포함되어 있습니다.`);
+      }
+      if (opts.allowMixedOverflow && remM.length === 1 && remW.length >= 1) {
+        // Pick woman closest to balanced average
+        const wPick = remW.shift();
+        teams.push(makeTeam(remM.pop(), wPick, 'men', true));
+        warnings.push(`남성 인원 홀수로 인해 잔여 남성 1명과 여성 1명을 [혼성 보정팀]으로 유연 편성했습니다.`);
+      }
+      if (opts.allowMixedOverflow && remW.length >= 2) {
+        remW = pairSameList(remW, 'women', opts.pairingStrategy);
+        warnings.push(`잔여 여성 인원을 여성복식 팀으로 추가 편성했습니다.`);
+      }
+      leftovers.push(...remM, ...remW);
+    } else if (opts.teamMode === 'women') {
+      const remW = pairSameList(women, 'women', opts.pairingStrategy);
+      let remM = men.slice();
+      if (remM.length > 0) {
+        warnings.push(`여성복식 설정이지만 남성 참가자 ${remM.length}명이 포함되어 있습니다.`);
+      }
+      if (opts.allowMixedOverflow && remW.length === 1 && remM.length >= 1) {
+        const mPick = remM.shift();
+        teams.push(makeTeam(remW.pop(), mPick, 'women', true));
+        warnings.push(`여성 인원 홀수로 인해 잔여 여성 1명과 남성 1명을 [혼성 보정팀]으로 유연 편성했습니다.`);
+      }
+      if (opts.allowMixedOverflow && remM.length >= 2) {
+        remM = pairSameList(remM, 'men', opts.pairingStrategy);
+        warnings.push(`잔여 남성 인원을 남성복식 팀으로 추가 편성했습니다.`);
+      }
+      leftovers.push(...remW, ...remM);
+    } else {
+      // Mixed mode: pair M + F first
+      const mArr = men.slice();
+      const wArr = women.slice();
+      const mixCount = Math.min(mArr.length, wArr.length);
+      for (let i = 0; i < mixCount; i++) {
+        let m, w;
+        if (opts.pairingStrategy === 'balanced') {
+          m = mArr.shift(); // strongest M
+          w = wArr.pop();   // weakest F
+        } else {
+          m = mArr.shift();
+          w = wArr.shift();
+        }
+        teams.push(makeTeam(m, w, 'mixed', false));
+      }
+      // Remaining same-gender players
+      if (mArr.length >= 2) {
+        const remM = pairSameList(mArr, 'mixed', opts.pairingStrategy);
+        warnings.push(`남성 인원이 여성보다 많아 잔여 남성으로 남성복식 보정팀을 편성했습니다.`);
+        leftovers.push(...remM);
+      } else {
+        leftovers.push(...mArr);
+      }
+      if (wArr.length >= 2) {
+        const remW = pairSameList(wArr, 'mixed', opts.pairingStrategy);
+        warnings.push(`여성 인원이 남성보다 많아 잔여 여성으로 여성복식 보정팀을 편성했습니다.`);
+        leftovers.push(...remW);
+      } else {
+        leftovers.push(...wArr);
+      }
+    }
+
+    if (leftovers.length > 0) {
+      warnings.push(
+        `전체 인원이 홀수(${active.length}명)여서 ${leftovers.map((p) => p.name).join(', ')} 선수가 대기(예비/교체) 인원으로 분류되었습니다.`
+      );
+    }
+
+    return { teams, leftovers, warnings };
+  }
+
+  /**
+   * Partition items (teams or players) into `groupCount` groups.
+   * mode: 'skill-tier' (group by skill level: Group A = strongest, Group B = next...)
+   *    or 'balanced' (snake-draft so all groups have equal skill & gender distribution)
+   */
+  function allocateIntoGroups(items, groupCount, mode, getWeightFn, getGenderFn) {
+    const count = Math.max(1, Math.min(Number(groupCount) || 1, Math.max(1, items.length)));
+    const groupNames = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const groups = Array.from({ length: count }, (_, idx) => ({
+      id: uid('grp'),
+      name: `${groupNames[idx] || (idx + 1)}조`,
+      index: idx,
+      items: [],
+    }));
+
+    if (items.length === 0) return groups;
+
+    const sorted = items.slice().sort((a, b) => {
+      const wa = getWeightFn(a);
+      const wb = getWeightFn(b);
+      if (wb !== wa) return wb - wa;
+      const ga = getGenderFn ? getGenderFn(a) : '';
+      const gb = getGenderFn ? getGenderFn(b) : '';
+      return ga.localeCompare(gb);
+    });
+
+    if (mode === 'skill-tier') {
+      // Split sorted list into contiguous skill-level buckets
+      const baseSize = Math.floor(sorted.length / count);
+      const remainder = sorted.length % count;
+      let cursor = 0;
+      for (let g = 0; g < count; g++) {
+        const sz = baseSize + (g < remainder ? 1 : 0);
+        groups[g].items = sorted.slice(cursor, cursor + sz);
+        cursor += sz;
+      }
+    } else {
+      // Snake draft: 0..count-1, then count-1..0
+      // Separate by gender first if getGenderFn provided so gender ratio is balanced too
+      if (getGenderFn) {
+        const men = sorted.filter((x) => getGenderFn(x) === 'M');
+        const women = sorted.filter((x) => getGenderFn(x) === 'F');
+        const others = sorted.filter((x) => getGenderFn(x) !== 'M' && getGenderFn(x) !== 'F');
+        const ordered = [...men, ...women, ...others];
+        ordered.forEach((item, idx) => {
+          const round = Math.floor(idx / count);
+          const pos = idx % count;
+          const targetIdx = round % 2 === 0 ? pos : count - 1 - pos;
+          groups[targetIdx].items.push(item);
+        });
+      } else {
+        sorted.forEach((item, idx) => {
+          const round = Math.floor(idx / count);
+          const pos = idx % count;
+          const targetIdx = round % 2 === 0 ? pos : count - 1 - pos;
+          groups[targetIdx].items.push(item);
+        });
+      }
+    }
+
+    return groups;
+  }
+
+  /**
+   * Standard ITF/KTA Tournament Bracket Seed Ordering for power-of-2 bracket size.
+   * Ensures Seed 1 and Seed 2 only meet in Final, and BYEs go to top seeds first.
+   */
+  function getBracketSeedOrder(size) {
+    if (size <= 2) return [1, 2];
+    const prev = getBracketSeedOrder(size / 2);
+    const result = [];
+    for (let i = 0; i < prev.length; i++) {
+      result.push(prev[i]);
+      result.push(size + 1 - prev[i]);
+    }
+    return result;
+  }
+
+  function roundName(teamsInRound) {
+    if (teamsInRound === 2) return '결승';
+    if (teamsInRound === 4) return '4강 (준결승)';
+    if (teamsInRound === 8) return '8강';
+    if (teamsInRound === 16) return '16강';
+    if (teamsInRound === 32) return '32강';
+    return `${teamsInRound}강`;
+  }
+
+  /**
+   * Generate Tournament Brackets per Group.
+   * Each group runs its own single-elimination bracket with automatic BYE advancement.
+   */
+  function generateTournament(players, config) {
+    const cfg = Object.assign({
+      teamMode: 'mixed',
+      pairingStrategy: 'balanced',
+      groupCount: 1,
+      groupMode: 'skill-tier', // 'skill-tier' | 'balanced'
+      levels: SKILL_PRESETS.abcde.levels,
+      allowMixedOverflow: true,
+    }, config || {});
+
+    const { teams, leftovers, warnings } = buildDoublesTeams(players, cfg);
+    if (teams.length < 2) {
+      warnings.push('토너먼트를 진행하려면 최소 2팀(4명) 이상이 필요합니다.');
+      return { groups: [], teams, leftovers, warnings };
+    }
+
+    const effectiveGroupCount = Math.min(cfg.groupCount, Math.max(1, Math.floor(teams.length / 2)));
+    if (effectiveGroupCount < cfg.groupCount) {
+      warnings.push(`팀 수(${teams.length}팀)에 비해 그룹 수가 많아 ${effectiveGroupCount}개 그룹으로 자동 조정했습니다.`);
+    }
+
+    const rawGroups = allocateIntoGroups(
+      teams,
+      effectiveGroupCount,
+      cfg.groupMode,
+      (t) => t.avgWeight,
+      null
+    );
+
+    const groups = rawGroups.map((g) => {
+      const seededTeams = g.items.slice().sort((a, b) => b.avgWeight - a.avgWeight);
+      const n = seededTeams.length;
+      let bracketSize = 2;
+      while (bracketSize < n) bracketSize *= 2;
+      const numRounds = Math.log2(bracketSize);
+      const seedOrder = getBracketSeedOrder(bracketSize);
+
+      const rounds = [];
+      for (let r = 0; r < numRounds; r++) {
+        const matchCount = bracketSize / Math.pow(2, r + 1);
+        const rName = roundName(matchCount * 2);
+        const matches = [];
+        for (let m = 0; m < matchCount; m++) {
+          let teamA = null;
+          let teamB = null;
+          let isBye = false;
+
+          if (r === 0) {
+            const seedA = seedOrder[m * 2];
+            const seedB = seedOrder[m * 2 + 1];
+            teamA = seedA <= n ? seededTeams[seedA - 1] : null;
+            teamB = seedB <= n ? seededTeams[seedB - 1] : null;
+            if ((teamA && !teamB) || (!teamA && teamB)) {
+              isBye = true;
+            }
+          }
+
+          matches.push({
+            id: uid('tm'),
+            groupId: g.id,
+            roundIndex: r,
+            roundName: rName,
+            matchIndex: m,
+            teamA: teamA ? { id: teamA.id, name: teamA.name, players: teamA.players, division: teamA.division, isMixedOverflow: teamA.isMixedOverflow, avgWeight: teamA.avgWeight } : null,
+            teamB: teamB ? { id: teamB.id, name: teamB.name, players: teamB.players, division: teamB.division, isMixedOverflow: teamB.isMixedOverflow, avgWeight: teamB.avgWeight } : null,
+            scoreA: null,
+            scoreB: null,
+            status: isBye ? 'bye' : 'pending', // 'pending' | 'completed' | 'bye' | 'walkover'
+            winnerSide: isBye ? (teamA ? 'A' : 'B') : null,
+            note: isBye ? '부전승 (BYE)' : '',
+          });
+        }
+        rounds.push({ roundIndex: r, name: rName, matches });
+      }
+
+      // Propagate Round 0 BYEs to Round 1
+      propagateBracketWinners(rounds);
+
+      return {
+        id: g.id,
+        name: g.name,
+        teams: seededTeams,
+        rounds,
+      };
+    });
+
+    return { groups, teams, leftovers, warnings };
+  }
+
+  /**
+   * Propagate completed/bye winners through tournament rounds cleanly.
+   */
+  function propagateBracketWinners(rounds) {
+    for (let r = 0; r < rounds.length - 1; r++) {
+      const curr = rounds[r].matches;
+      const next = rounds[r + 1].matches;
+      for (let m = 0; m < curr.length; m++) {
+        const match = curr[m];
+        const nextMatch = next[Math.floor(m / 2)];
+        const slot = m % 2 === 0 ? 'teamA' : 'teamB';
+
+        let winnerTeam = null;
+        if (match.winnerSide === 'A') winnerTeam = match.teamA;
+        else if (match.winnerSide === 'B') winnerTeam = match.teamB;
+
+        const prevTeamId = nextMatch[slot] ? nextMatch[slot].id : null;
+        const newTeamId = winnerTeam ? winnerTeam.id : null;
+
+        if (prevTeamId !== newTeamId) {
+          nextMatch[slot] = winnerTeam ? Object.assign({}, winnerTeam) : null;
+          // If the next match already had a result with a different team, reset downstream safely
+          if (nextMatch.status === 'completed' || nextMatch.status === 'walkover') {
+            nextMatch.scoreA = null;
+            nextMatch.scoreB = null;
+            nextMatch.status = 'pending';
+            nextMatch.winnerSide = null;
+            nextMatch.note = '';
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Recommend optimal number of games per player for Individual (KDK) Doubles.
+   */
+  function recommendIndividualGames(playerCount) {
+    if (playerCount < 4) {
+      return { recommended: 0, options: [], reason: '복식 경기는 그룹당 최소 4명 이상 필요합니다.' };
+    }
+    if (playerCount === 4) {
+      return {
+        recommended: 3,
+        options: [3, 4],
+        reason: '4명 구성 시 3게임을 진행하면 모든 참가자가 서로 한 번씩 파트너가 됩니다 (총 3경기).',
+      };
+    }
+    // Find game counts (2..6) where (playerCount * g) % 4 === 0 for exact integer rounds
+    const exact = [];
+    for (let g = 2; g <= 6; g++) {
+      if ((playerCount * g) % 4 === 0) exact.push(g);
+    }
+    let rec = 4;
+    if (exact.includes(4)) rec = 4;
+    else if (exact.length > 0) rec = exact.find((g) => g >= 3) || exact[0];
+    else rec = 4;
+
+    const totalMatches = Math.ceil((playerCount * rec) / 4);
+    const exactNote =
+      (playerCount * rec) % 4 === 0
+        ? `전원 정확히 ${rec}게임 출전 (총 ${totalMatches}경기, 휴식 균등)`
+        : `총 ${totalMatches}경기 편성 (인원수 특성상 일부 선수 ±1경기 보정 또는 대기자 로테이션)`;
+
+    return {
+      recommended: rec,
+      options: [2, 3, 4, 5, 6],
+      reason: `${playerCount}명 기준 추천: 1인당 ${rec}게임 — ${exactNote}`,
+    };
+  }
+
+  /**
+   * Generate Individual (KDK-style partner rotation) Doubles schedule per group.
+   * Balances:
+   *  1. Equal games played per player (minimizes play-count variance)
+   *  2. Unique partners (avoids repeating partners)
+   *  3. Unique opponents
+   *  4. Skill balance between Team A and Team B
+   *  5. Respects teamMode ('men' | 'women' | 'mixed') while flexibly allowing mixed-overflow when counts don't divide evenly
+   */
+  function generateIndividualMode(players, config) {
+    const cfg = Object.assign({
+      teamMode: 'mixed',
+      groupCount: 1,
+      groupMode: 'skill-tier', // 'skill-tier' | 'balanced'
+      gamesPerPlayer: 4,
+      levels: SKILL_PRESETS.abcde.levels,
+    }, config || {});
+
+    const active = getActivePlayers(players).map((p) => ({
+      ...p,
+      _w: getSkillWeight(p.skill, cfg.levels),
+    }));
+
+    const warnings = [];
+    if (active.length < 4) {
+      warnings.push('개인전(복식 로테이션)을 진행하려면 최소 4명 이상의 참가자가 필요합니다.');
+      return { groups: [], warnings };
+    }
+
+    // Filter or warn if teamMode is men/women but opposite gender exists
+    const menCount = active.filter((p) => p.gender === 'M').length;
+    const womenCount = active.filter((p) => p.gender === 'F').length;
+    if (cfg.teamMode === 'men' && womenCount > 0) {
+      warnings.push(`남성복식 설정에 여성 ${womenCount}명이 포함되어 있어, 혼성 매칭이 유연하게 발생할 수 있습니다.`);
+    } else if (cfg.teamMode === 'women' && menCount > 0) {
+      warnings.push(`여성복식 설정에 남성 ${menCount}명이 포함되어 있어, 혼성 매칭이 유연하게 발생할 수 있습니다.`);
+    }
+
+    const maxGroups = Math.max(1, Math.floor(active.length / 4));
+    const effectiveGroups = Math.min(cfg.groupCount, maxGroups);
+    if (effectiveGroups < cfg.groupCount) {
+      warnings.push(`그룹당 최소 4명이 필요해 ${effectiveGroups}개 그룹으로 자동 조정했습니다.`);
+    }
+
+    const rawGroups = allocateIntoGroups(
+      active,
+      effectiveGroups,
+      cfg.groupMode,
+      (p) => p._w,
+      (p) => p.gender
+    );
+
+    const groups = rawGroups.map((g) => {
+      const grpPlayers = g.items;
+      const targetGames = Math.max(1, Number(cfg.gamesPerPlayer) || recommendIndividualGames(grpPlayers.length).recommended);
+      const { matches, groupWarnings } = buildKdkScheduleForGroup(g.id, grpPlayers, targetGames, cfg.teamMode);
+      warnings.push(...groupWarnings.map((w) => `[${g.name}] ${w}`));
+
+      return {
+        id: g.id,
+        name: g.name,
+        players: grpPlayers.map((p) => ({ id: p.id, name: p.name, gender: p.gender, skill: p.skill, weight: p._w })),
+        targetGamesPerPlayer: targetGames,
+        matches,
+      };
+    });
+
+    return { groups, warnings };
+  }
+
+  function buildKdkScheduleForGroup(groupId, grpPlayers, targetGames, teamMode) {
+    const n = grpPlayers.length;
+    const groupWarnings = [];
+    if (n < 4) {
+      groupWarnings.push('참가자가 4명 미만이어서 복식 경기를 생성할 수 없습니다.');
+      return { matches: [], groupWarnings };
+    }
+
+    const totalSlots = n * targetGames;
+    const totalMatches = Math.ceil(totalSlots / 4);
+    if (totalSlots % 4 !== 0) {
+      const extra = totalMatches * 4 - totalSlots;
+      groupWarnings.push(
+        `인원(${n}명) × ${targetGames}게임이 4의 배수가 아니므로, 총 ${totalMatches}경기로 편성하고 ${extra}명이 1경기 추가 출전(공정 로테이션)합니다.`
+      );
+    }
+
+    const playCount = {};
+    const partnerCount = {};
+    const opponentCount = {};
+    const lastPlayedMatch = {};
+    grpPlayers.forEach((p) => {
+      playCount[p.id] = 0;
+      lastPlayedMatch[p.id] = -10;
+    });
+
+    function pairKey(a, b) {
+      return a < b ? `${a}|${b}` : `${b}|${a}`;
+    }
+
+    const matches = [];
+    for (let mIdx = 0; mIdx < totalMatches; mIdx++) {
+      // Select 4 players prioritizing lowest playCount, then longest rest
+      const candidates = grpPlayers.slice().sort((a, b) => {
+        if (playCount[a.id] !== playCount[b.id]) return playCount[a.id] - playCount[b.id];
+        if (lastPlayedMatch[a.id] !== lastPlayedMatch[b.id]) return lastPlayedMatch[a.id] - lastPlayedMatch[b.id];
+        return Math.random() - 0.5;
+      });
+      const four = candidates.slice(0, 4);
+
+      // Evaluate all 3 possible ways to split 4 players into 2 doubles teams:
+      // (0,1 vs 2,3), (0,2 vs 1,3), (0,3 vs 1,2)
+      const splits = [
+        [[four[0], four[1]], [four[2], four[3]]],
+        [[four[0], four[2]], [four[1], four[3]]],
+        [[four[0], four[3]], [four[1], four[2]]],
+      ];
+
+      let bestSplit = splits[0];
+      let bestCost = Infinity;
+
+      for (const [tA, tB] of splits) {
+        let cost = 0;
+        // 1. Penalize repeated partners heavily
+        cost += (partnerCount[pairKey(tA[0].id, tA[1].id)] || 0) * 100;
+        cost += (partnerCount[pairKey(tB[0].id, tB[1].id)] || 0) * 100;
+
+        // 2. Penalize repeated opponents moderately
+        for (const a of tA) {
+          for (const b of tB) {
+            cost += (opponentCount[pairKey(a.id, b.id)] || 0) * 8;
+          }
+        }
+
+        // 3. Skill balance difference between Team A and Team B
+        const wA = tA[0]._w + tA[1]._w;
+        const wB = tB[0]._w + tB[1]._w;
+        cost += Math.abs(wA - wB) * 15;
+
+        // 4. Gender alignment with teamMode
+        const aMixed = tA[0].gender !== tA[1].gender;
+        const bMixed = tB[0].gender !== tB[1].gender;
+        if (teamMode === 'mixed') {
+          if (!aMixed) cost += 20;
+          if (!bMixed) cost += 20;
+        } else if (teamMode === 'men' || teamMode === 'women') {
+          if (aMixed) cost += 25;
+          if (bMixed) cost += 25;
+        }
+
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestSplit = [tA, tB];
+        }
+      }
+
+      const [teamA, teamB] = bestSplit;
+      // Record stats
+      [...teamA, ...teamB].forEach((p) => {
+        playCount[p.id]++;
+        lastPlayedMatch[p.id] = mIdx;
+      });
+      const pkA = pairKey(teamA[0].id, teamA[1].id);
+      const pkB = pairKey(teamB[0].id, teamB[1].id);
+      partnerCount[pkA] = (partnerCount[pkA] || 0) + 1;
+      partnerCount[pkB] = (partnerCount[pkB] || 0) + 1;
+      for (const a of teamA) {
+        for (const b of teamB) {
+          const ok = pairKey(a.id, b.id);
+          opponentCount[ok] = (opponentCount[ok] || 0) + 1;
+        }
+      }
+
+      const isMixedFlag =
+        (teamMode === 'men' || teamMode === 'women') &&
+        (teamA[0].gender !== teamA[1].gender || teamB[0].gender !== teamB[1].gender);
+
+      matches.push({
+        id: uid('im'),
+        groupId,
+        order: mIdx + 1,
+        teamA: {
+          players: [teamA[0].id, teamA[1].id],
+          names: [teamA[0].name, teamA[1].name],
+          label: `${teamA[0].name} / ${teamA[1].name}`,
+          genders: [teamA[0].gender, teamA[1].gender],
+          weightSum: teamA[0]._w + teamA[1]._w,
+        },
+        teamB: {
+          players: [teamB[0].id, teamB[1].id],
+          names: [teamB[0].name, teamB[1].name],
+          label: `${teamB[0].name} / ${teamB[1].name}`,
+          genders: [teamB[0].gender, teamB[1].gender],
+          weightSum: teamB[0]._w + teamB[1]._w,
+        },
+        scoreA: null,
+        scoreB: null,
+        status: 'pending',
+        isMixedOverflow: isMixedFlag,
+        note: isMixedFlag ? '성별 보정 매칭' : '',
+      });
+    }
+
+    return { matches, groupWarnings };
+  }
+
+  /**
+   * Recommend optimal number of matches per tie (그룹 대항전 게임수 추천)
+   */
+  function recommendGroupGames(totalPlayers, groupCount) {
+    const avgPerGroup = Math.floor(totalPlayers / Math.max(1, groupCount));
+    if (avgPerGroup < 2) {
+      return { recommended: 1, options: [1, 2, 3], reason: '그룹당 최소 2명(1복식) 이상이어야 단체전을 진행할 수 있습니다.' };
+    }
+    const maxUniquePairs = Math.floor(avgPerGroup / 2);
+    // Prefer odd number of games (3 or 5) to avoid group-tie draws
+    let rec = 3;
+    if (avgPerGroup >= 10) rec = 5;
+    else if (avgPerGroup >= 6) rec = 3;
+    else if (avgPerGroup >= 4) rec = 3;
+    else rec = 1;
+
+    return {
+      recommended: rec,
+      options: [1, 2, 3, 4, 5, 6, 7],
+      reason: `그룹당 평균 ${avgPerGroup}명(고유 복식조 ${maxUniquePairs}팀 가능) 기준, 승부 결정력이 좋은 ${rec}복식(경기)을 추천합니다.`,
+    };
+  }
+
+  /**
+   * Generate Group Match (단체전):
+   *  1. Snake-draft players into `groupCount` balanced groups by gender & skill.
+   *  2. Assign a default Group Captain (highest skill or first member, editable by user).
+   *  3. Create Round-Robin ties between groups, each tie having `gamesPerTie` ordered doubles slots.
+   *  4. Each group has an editable `lineup` array (length = gamesPerTie) that the group captain fills in!
+   */
+  function generateGroupMode(players, config) {
+    const cfg = Object.assign({
+      teamMode: 'mixed',
+      groupCount: 2,
+      gamesPerTie: 3,
+      levels: SKILL_PRESETS.abcde.levels,
+    }, config || {});
+
+    const active = getActivePlayers(players).map((p) => ({
+      ...p,
+      _w: getSkillWeight(p.skill, cfg.levels),
+    }));
+
+    const warnings = [];
+    const effGroups = Math.max(2, Math.min(Number(cfg.groupCount) || 2, Math.floor(active.length / 2) || 2));
+    if (active.length < 4) {
+      warnings.push('그룹전(단체전)을 진행하려면 최소 4명(2그룹 × 2명) 이상 필요합니다.');
+      return { groups: [], ties: [], warnings };
+    }
+    if (effGroups < cfg.groupCount) {
+      warnings.push(`그룹당 최소 2명(1복식)이 필요해 ${effGroups}개 그룹으로 조정했습니다.`);
+    }
+
+    const rawGroups = allocateIntoGroups(
+      active,
+      effGroups,
+      'balanced',
+      (p) => p._w,
+      (p) => p.gender
+    );
+
+    const gamesPerTie = Math.max(1, Number(cfg.gamesPerTie) || recommendGroupGames(active.length, effGroups).recommended);
+
+    const groups = rawGroups.map((g) => {
+      const members = g.items.map((p) => ({
+        id: p.id,
+        name: p.name,
+        gender: p.gender,
+        skill: p.skill,
+        weight: p._w,
+      }));
+      const avgWeight = members.length
+        ? Number((members.reduce((s, m) => s + m.weight, 0) / members.length).toFixed(2))
+        : 0;
+      const autoLineup = buildAutoLineupForGroup(members, gamesPerTie, cfg.teamMode);
+      return {
+        id: g.id,
+        name: `${g.name} 팀`,
+        captainId: members[0] ? members[0].id : null,
+        members,
+        avgWeight,
+        lineup: autoLineup, // Array of { order, p1Id, p2Id }
+        lineupSubmitted: false,
+      };
+    });
+
+    // Generate Round-Robin Ties between all groups
+    const ties = [];
+    let tieOrder = 1;
+    for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        const gA = groups[i];
+        const gB = groups[j];
+        const matches = [];
+        for (let k = 0; k < gamesPerTie; k++) {
+          matches.push({
+            id: uid('gm'),
+            tieId: null, // assigned below
+            order: k + 1,
+            teamAPlayers: [gA.lineup[k]?.p1Id || null, gA.lineup[k]?.p2Id || null],
+            teamBPlayers: [gB.lineup[k]?.p1Id || null, gB.lineup[k]?.p2Id || null],
+            scoreA: null,
+            scoreB: null,
+            status: 'pending',
+            note: '',
+          });
+        }
+        const tieId = uid('tie');
+        matches.forEach((m) => (m.tieId = tieId));
+        ties.push({
+          id: tieId,
+          order: tieOrder++,
+          groupAId: gA.id,
+          groupBId: gB.id,
+          matches,
+        });
+      }
+    }
+
+    return { groups, ties, gamesPerTie, warnings };
+  }
+
+  /**
+   * Helper: Auto-fill a balanced lineup of `gamesPerTie` doubles pairs for a group.
+   */
+  function buildAutoLineupForGroup(members, gamesPerTie, teamMode) {
+    const lineup = [];
+    if (members.length < 2) {
+      for (let k = 0; k < gamesPerTie; k++) {
+        lineup.push({ order: k + 1, p1Id: members[0]?.id || null, p2Id: null });
+      }
+      return lineup;
+    }
+
+    const usage = {};
+    members.forEach((m) => (usage[m.id] = 0));
+
+    for (let k = 0; k < gamesPerTie; k++) {
+      const sorted = members.slice().sort((a, b) => {
+        if (usage[a.id] !== usage[b.id]) return usage[a.id] - usage[b.id];
+        return b.weight - a.weight;
+      });
+      const p1 = sorted[0];
+      let p2 = sorted[1];
+
+      if (teamMode === 'mixed') {
+        const opp = sorted.slice(1).find((m) => m.gender !== p1.gender);
+        if (opp) p2 = opp;
+      } else if (teamMode === 'men' || teamMode === 'women') {
+        const same = sorted.slice(1).find((m) => m.gender === p1.gender);
+        if (same) p2 = same;
+      }
+
+      usage[p1.id]++;
+      usage[p2.id]++;
+      lineup.push({ order: k + 1, p1Id: p1.id, p2Id: p2.id });
+    }
+    return lineup;
+  }
+
+  /**
+   * Generate Event Mode (자유 친선/믹스 매치) matches on demand.
+   */
+  function generateEventRound(players, existingMatches, config) {
+    const cfg = Object.assign({
+      teamMode: 'mixed',
+      pairingStrategy: 'random', // 'random' | 'balanced'
+      levels: SKILL_PRESETS.abcde.levels,
+      formatLabel: '7점 타이브레이크',
+    }, config || {});
+
+    const active = getActivePlayers(players).map((p) => ({
+      ...p,
+      _w: getSkillWeight(p.skill, cfg.levels),
+    }));
+
+    const warnings = [];
+    if (active.length < 4) {
+      warnings.push('이벤트 복식 매치를 생성하려면 최소 4명 이상 필요합니다.');
+      return { newMatches: [], resting: active, warnings };
+    }
+
+    // Shuffle or sort by play count so everyone plays evenly
+    const playCounts = {};
+    active.forEach((p) => (playCounts[p.id] = 0));
+    (existingMatches || []).forEach((m) => {
+      [...(m.teamA.players || []), ...(m.teamB.players || [])].forEach((pid) => {
+        if (playCounts[pid] !== undefined) playCounts[pid]++;
+      });
+    });
+
+    const pool = active.slice().sort((a, b) => {
+      if (playCounts[a.id] !== playCounts[b.id]) return playCounts[a.id] - playCounts[b.id];
+      return Math.random() - 0.5;
+    });
+
+    const usableCount = Math.floor(pool.length / 4) * 4;
+    const playing = pool.slice(0, usableCount);
+    const resting = pool.slice(usableCount);
+
+    if (resting.length > 0) {
+      warnings.push(`인원(${pool.length}명) 중 ${resting.map((p) => p.name).join(', ')} 선수는 이번 라운드 휴식 후 다음 라운드 우선 배정됩니다.`);
+    }
+
+    const { teams } = buildDoublesTeams(playing, {
+      teamMode: cfg.teamMode,
+      pairingStrategy: cfg.pairingStrategy === 'balanced' ? 'balanced' : 'similar',
+      levels: cfg.levels,
+      allowMixedOverflow: true,
+    });
+
+    // Pair teams against closest avgWeight
+    const sortedTeams = teams.slice().sort((a, b) => b.avgWeight - a.avgWeight);
+    const newMatches = [];
+    const baseOrder = (existingMatches || []).length;
+    for (let i = 0; i + 1 < sortedTeams.length; i += 2) {
+      const tA = sortedTeams[i];
+      const tB = sortedTeams[i + 1];
+      newMatches.push({
+        id: uid('em'),
+        order: baseOrder + newMatches.length + 1,
+        formatLabel: cfg.formatLabel,
+        teamA: {
+          players: tA.players,
+          names: tA.playerDetails.map((d) => d.name),
+          label: tA.name,
+          isMixedOverflow: tA.isMixedOverflow,
+        },
+        teamB: {
+          players: tB.players,
+          names: tB.playerDetails.map((d) => d.name),
+          label: tB.name,
+          isMixedOverflow: tB.isMixedOverflow,
+        },
+        scoreA: null,
+        scoreB: null,
+        status: 'pending',
+        note: '',
+      });
+    }
+
+    return { newMatches, resting, warnings };
+  }
+
+  /**
+   * Official Points & Standings Calculator
+   * Rule: Win = +1, Draw = 0, Loss = -1
+   * Tie-breaker:
+   *   1. points (승점)
+   *   2. totalScored (총득점 — user's explicit rule!)
+   *   3. scoreDiff (득실차)
+   *   4. wins (다승)
+   */
+  function computeStandings(entities, completedMatches) {
+    // entities: [{ id, name, meta? }]
+    // completedMatches: [{ sideAIds: [id...], sideBIds: [id...], scoreA, scoreB, status }]
+    const map = {};
+    entities.forEach((e) => {
+      map[e.id] = {
+        id: e.id,
+        name: e.name,
+        meta: e.meta || '',
+        played: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        points: 0,
+        totalScored: 0,
+        totalConceded: 0,
+        scoreDiff: 0,
+      };
+    });
+
+    (completedMatches || []).forEach((m) => {
+      if (m.status !== 'completed' && m.status !== 'walkover') return;
+      const sA = Number(m.scoreA);
+      const sB = Number(m.scoreB);
+      if (isNaN(sA) || isNaN(sB)) return;
+
+      const resA = sA > sB ? 'W' : sA < sB ? 'L' : 'D';
+      const resB = sB > sA ? 'W' : sB < sA ? 'L' : 'D';
+
+      (m.sideAIds || []).forEach((id) => {
+        const row = map[id];
+        if (!row) return;
+        row.played++;
+        row.totalScored += sA;
+        row.totalConceded += sB;
+        if (resA === 'W') { row.wins++; row.points += 1; }
+        else if (resA === 'L') { row.losses++; row.points -= 1; }
+        else { row.draws++; }
+      });
+
+      (m.sideBIds || []).forEach((id) => {
+        const row = map[id];
+        if (!row) return;
+        row.played++;
+        row.totalScored += sB;
+        row.totalConceded += sA;
+        if (resB === 'W') { row.wins++; row.points += 1; }
+        else if (resB === 'L') { row.losses++; row.points -= 1; }
+        else { row.draws++; }
+      });
+    });
+
+    const list = Object.values(map).map((r) => {
+      r.scoreDiff = r.totalScored - r.totalConceded;
+      return r;
+    });
+
+    list.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.totalScored !== a.totalScored) return b.totalScored - a.totalScored;
+      if (b.scoreDiff !== a.scoreDiff) return b.scoreDiff - a.scoreDiff;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      return a.name.localeCompare(b.name, 'ko');
+    });
+
+    // Assign ranks (shared rank if points & totalScored & scoreDiff all equal)
+    list.forEach((row, idx) => {
+      if (idx === 0) {
+        row.rank = 1;
+      } else {
+        const prev = list[idx - 1];
+        if (
+          row.points === prev.points &&
+          row.totalScored === prev.totalScored &&
+          row.scoreDiff === prev.scoreDiff &&
+          row.wins === prev.wins
+        ) {
+          row.rank = prev.rank;
+        } else {
+          row.rank = idx + 1;
+        }
+      }
+    });
+
+    return list;
+  }
+
+  /**
+   * Incident Handler: Substitute a withdrawn player with a replacement player
+   * across all pending matches in any tournament type.
+   */
+  function substitutePlayerInTournament(tournament, oldPlayerId, newPlayer) {
+    let replacedCount = 0;
+    const type = tournament.type;
+
+    if (type === 'tournament' && tournament.data && tournament.data.groups) {
+      tournament.data.groups.forEach((g) => {
+        const affectedTeamIds = new Set();
+        g.teams.forEach((t) => {
+          const idx = t.players.indexOf(oldPlayerId);
+          if (idx !== -1) {
+            t.players = t.players.slice();
+            t.players[idx] = newPlayer.id;
+            if (t.playerDetails && t.playerDetails[idx]) {
+              t.playerDetails[idx].id = newPlayer.id;
+              t.playerDetails[idx].name = newPlayer.name;
+              t.playerDetails[idx].gender = newPlayer.gender;
+              t.playerDetails[idx].skill = newPlayer.skill;
+            }
+            t.name = t.playerDetails ? t.playerDetails.map((d) => d.name).join(' / ') : t.name;
+            affectedTeamIds.add(t.id);
+          }
+        });
+        g.rounds.forEach((r) => {
+          r.matches.forEach((m) => {
+            if (m.status !== 'pending') return;
+            ['teamA', 'teamB'].forEach((side) => {
+              if (m[side] && affectedTeamIds.has(m[side].id)) {
+                const matchedTeam = g.teams.find((t) => t.id === m[side].id);
+                if (matchedTeam) {
+                  m[side].players = matchedTeam.players.slice();
+                  m[side].name = matchedTeam.name;
+                  replacedCount++;
+                }
+              }
+            });
+          });
+        });
+      });
+    } else if (type === 'individual' && tournament.data && tournament.data.groups) {
+      tournament.data.groups.forEach((g) => {
+        const pIdx = g.players.findIndex((p) => p.id === oldPlayerId);
+        if (pIdx !== -1) {
+          g.players[pIdx] = {
+            id: newPlayer.id,
+            name: newPlayer.name,
+            gender: newPlayer.gender,
+            skill: newPlayer.skill,
+            weight: getSkillWeight(newPlayer.skill, tournament.skillLevels),
+          };
+        }
+        g.matches.forEach((m) => {
+          if (m.status !== 'pending') return;
+          ['teamA', 'teamB'].forEach((side) => {
+            const idx = m[side].players.indexOf(oldPlayerId);
+            if (idx !== -1) {
+              m[side].players[idx] = newPlayer.id;
+              m[side].names[idx] = newPlayer.name;
+              m[side].genders[idx] = newPlayer.gender;
+              m[side].label = m[side].names.join(' / ');
+              replacedCount++;
+            }
+          });
+        });
+      });
+    } else if (type === 'group' && tournament.data && tournament.data.groups) {
+      tournament.data.groups.forEach((g) => {
+        const mIdx = g.members.findIndex((m) => m.id === oldPlayerId);
+        if (mIdx !== -1) {
+          g.members[mIdx] = {
+            id: newPlayer.id,
+            name: newPlayer.name,
+            gender: newPlayer.gender,
+            skill: newPlayer.skill,
+            weight: getSkillWeight(newPlayer.skill, tournament.skillLevels),
+          };
+          if (g.captainId === oldPlayerId) g.captainId = newPlayer.id;
+        }
+        g.lineup.forEach((slot) => {
+          if (slot.p1Id === oldPlayerId) slot.p1Id = newPlayer.id;
+          if (slot.p2Id === oldPlayerId) slot.p2Id = newPlayer.id;
+        });
+      });
+      (tournament.data.ties || []).forEach((tie) => {
+        tie.matches.forEach((m) => {
+          if (m.status !== 'pending') return;
+          ['teamAPlayers', 'teamBPlayers'].forEach((key) => {
+            const idx = m[key].indexOf(oldPlayerId);
+            if (idx !== -1) {
+              m[key][idx] = newPlayer.id;
+              replacedCount++;
+            }
+          });
+        });
+      });
+    } else if (type === 'event' && tournament.data && tournament.data.matches) {
+      tournament.data.matches.forEach((m) => {
+        if (m.status !== 'pending') return;
+        ['teamA', 'teamB'].forEach((side) => {
+          const idx = m[side].players.indexOf(oldPlayerId);
+          if (idx !== -1) {
+            m[side].players[idx] = newPlayer.id;
+            m[side].names[idx] = newPlayer.name;
+            m[side].label = m[side].names.join(' / ');
+            replacedCount++;
+          }
+        });
+      });
+    }
+
+    return replacedCount;
+  }
+
+  /**
+   * Incident Handler: Mark all pending matches of a withdrawn player as Walkover (기권패).
+   */
+  function walkoverPlayerInTournament(tournament, playerId, walkoverScore) {
+    const woScore = Number(walkoverScore) || 6;
+    let affected = 0;
+    const type = tournament.type;
+
+    if (type === 'tournament' && tournament.data && tournament.data.groups) {
+      tournament.data.groups.forEach((g) => {
+        g.rounds.forEach((r) => {
+          r.matches.forEach((m) => {
+            if (m.status !== 'pending') return;
+            const inA = m.teamA && m.teamA.players && m.teamA.players.includes(playerId);
+            const inB = m.teamB && m.teamB.players && m.teamB.players.includes(playerId);
+            if (inA && !inB) {
+              m.scoreA = 0;
+              m.scoreB = woScore;
+              m.status = 'walkover';
+              m.winnerSide = 'B';
+              m.note = '불참 기권승 (W/O)';
+              affected++;
+            } else if (inB && !inA) {
+              m.scoreA = woScore;
+              m.scoreB = 0;
+              m.status = 'walkover';
+              m.winnerSide = 'A';
+              m.note = '불참 기권승 (W/O)';
+              affected++;
+            }
+          });
+        });
+        propagateBracketWinners(g.rounds);
+      });
+    } else if (type === 'individual' && tournament.data && tournament.data.groups) {
+      tournament.data.groups.forEach((g) => {
+        g.matches.forEach((m) => {
+          if (m.status !== 'pending') return;
+          const inA = m.teamA.players.includes(playerId);
+          const inB = m.teamB.players.includes(playerId);
+          if (inA && !inB) {
+            m.scoreA = 0;
+            m.scoreB = woScore;
+            m.status = 'walkover';
+            m.note = '불참 기권승 (W/O)';
+            affected++;
+          } else if (inB && !inA) {
+            m.scoreA = woScore;
+            m.scoreB = 0;
+            m.status = 'walkover';
+            m.note = '불참 기권승 (W/O)';
+            affected++;
+          }
+        });
+      });
+    } else if (type === 'group' && tournament.data && tournament.data.ties) {
+      tournament.data.ties.forEach((tie) => {
+        tie.matches.forEach((m) => {
+          if (m.status !== 'pending') return;
+          const inA = m.teamAPlayers.includes(playerId);
+          const inB = m.teamBPlayers.includes(playerId);
+          if (inA && !inB) {
+            m.scoreA = 0;
+            m.scoreB = woScore;
+            m.status = 'walkover';
+            m.note = '불참 기권승 (W/O)';
+            affected++;
+          } else if (inB && !inA) {
+            m.scoreA = woScore;
+            m.scoreB = 0;
+            m.status = 'walkover';
+            m.note = '불참 기권승 (W/O)';
+            affected++;
+          }
+        });
+      });
+    } else if (type === 'event' && tournament.data && tournament.data.matches) {
+      tournament.data.matches.forEach((m) => {
+        if (m.status !== 'pending') return;
+        const inA = m.teamA.players.includes(playerId);
+        const inB = m.teamB.players.includes(playerId);
+        if (inA && !inB) {
+          m.scoreA = 0;
+          m.scoreB = woScore;
+          m.status = 'walkover';
+          m.note = '불참 기권승 (W/O)';
+          affected++;
+        } else if (inB && !inA) {
+          m.scoreA = woScore;
+          m.scoreB = 0;
+          m.status = 'walkover';
+          m.note = '불참 기권승 (W/O)';
+          affected++;
+        }
+      });
+    }
+
+    return affected;
+  }
+
+  return {
+    SKILL_PRESETS,
+    MATCH_FORMATS,
+    uid,
+    getSkillWeight,
+    normalizeGender,
+    genderLabel,
+    teamTypeLabel,
+    getActivePlayers,
+    buildDoublesTeams,
+    allocateIntoGroups,
+    generateTournament,
+    propagateBracketWinners,
+    recommendIndividualGames,
+    generateIndividualMode,
+    recommendGroupGames,
+    generateGroupMode,
+    buildAutoLineupForGroup,
+    generateEventRound,
+    computeStandings,
+    substitutePlayerInTournament,
+    walkoverPlayerInTournament,
+  };
+});
+
+  </script>
+  <script>
+(function () {
+  'use strict';
+
+  const E = window.TennisEngine;
+  const STORAGE_KEY = 'courtflow_tennis_app_v1';
+
+  // --- Application State ---
+  let state = {
+    tournaments: [],
+    activeTournamentId: null,
+    activeSection: 'roster', // 'roster' | 'setup' | 'matches' | 'standings'
+    activeGroupTab: 0,
+    modal: null, // null | { type: 'new-tournament' | 'skill-config' | 'incident' | 'manual-event', payload? }
+  };
+
+  // --- Utilities ---
+  function esc(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function toast(msg) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => el.remove(), 260);
+    }, 2800);
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        tournaments: state.tournaments,
+        activeTournamentId: state.activeTournamentId,
+      }));
+    } catch (err) {
+      console.warn('localStorage save failed:', err);
+    }
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.tournaments) && parsed.tournaments.length > 0) {
+          state.tournaments = parsed.tournaments;
+          state.activeTournamentId = parsed.activeTournamentId || parsed.tournaments[0].id;
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('localStorage load failed:', err);
+    }
+    seedDemoTournaments();
+  }
+
+  function getActiveTournament() {
+    return state.tournaments.find((t) => t.id === state.activeTournamentId) || state.tournaments[0] || null;
+  }
+
+  function typeMeta(type) {
+    switch (type) {
+      case 'tournament': return { icon: '🏆', label: '토너먼트', short: '토너먼트' };
+      case 'individual': return { icon: '🔄', label: '개인전 (KDK)', short: '개인전' };
+      case 'group': return { icon: '🛡️', label: '그룹전 (단체전)', short: '그룹전' };
+      case 'event': return { icon: '⚡', label: '이벤트 매치', short: '이벤트' };
+      default: return { icon: '🎾', label: '대회', short: '대회' };
+    }
+  }
+
+  function getTournamentProgress(t) {
+    let total = 0;
+    let done = 0;
+    if (!t.data) return { total: 0, done: 0, statusLabel: '접수중' };
+
+    if (t.type === 'tournament' && t.data.groups) {
+      t.data.groups.forEach((g) =>
+        g.rounds.forEach((r) =>
+          r.matches.forEach((m) => {
+            if (m.status !== 'bye') {
+              total++;
+              if (m.status === 'completed' || m.status === 'walkover') done++;
+            }
+          })
+        )
+      );
+    } else if (t.type === 'individual' && t.data.groups) {
+      t.data.groups.forEach((g) =>
+        g.matches.forEach((m) => {
+          total++;
+          if (m.status === 'completed' || m.status === 'walkover') done++;
+        })
+      );
+    } else if (t.type === 'group' && t.data.ties) {
+      t.data.ties.forEach((tie) =>
+        tie.matches.forEach((m) => {
+          total++;
+          if (m.status === 'completed' || m.status === 'walkover') done++;
+        })
+      );
+    } else if (t.type === 'event' && t.data.matches) {
+      t.data.matches.forEach((m) => {
+        total++;
+        if (m.status === 'completed' || m.status === 'walkover') done++;
+      });
+    }
+
+    if (total === 0) return { total: 0, done: 0, statusLabel: '대진전' };
+    if (done === total) return { total, done, statusLabel: '완료' };
+    return { total, done, statusLabel: `${done}/${total}` };
+  }
+
+  // --- Demo Data Seeder ---
+  function makeSampleRoster(count) {
+    const pool = [
+      ['김민수', 'M', 'A'], ['이지영', 'F', 'A'], ['박준혁', 'M', 'B'], ['최수진', 'F', 'B'],
+      ['정현우', 'M', 'B'], ['강민지', 'F', 'C'], ['조도윤', 'M', 'C'], ['윤서연', 'F', 'C'],
+      ['장지훈', 'M', 'C'], ['임하은', 'F', 'D'], ['한영호', 'M', 'D'], ['오유진', 'F', 'D'],
+      ['서태양', 'M', 'A'], ['신다은', 'F', 'B'], ['권성민', 'M', 'D'], ['송예린', 'F', 'E'],
+    ];
+    return pool.slice(0, count || 12).map(([name, gender, skill]) => ({
+      id: E.uid('p'),
+      name,
+      gender,
+      skill,
+      status: 'active',
+    }));
+  }
+
+  function createTournamentObject(opts) {
+    const preset = E.SKILL_PRESETS.abcde;
+    return {
+      id: E.uid('trn'),
+      name: opts.name || '새 테니스 대회',
+      type: opts.type || 'tournament',
+      createdAt: new Date().toISOString().slice(0, 10),
+      skillPresetId: preset.id,
+      skillLevels: JSON.parse(JSON.stringify(preset.levels)),
+      players: opts.players || [],
+      config: Object.assign({
+        teamMode: 'mixed',
+        pairingStrategy: 'balanced',
+        groupCount: opts.type === 'group' ? 2 : 1,
+        groupMode: 'skill-tier',
+        gamesPerPlayer: 4,
+        gamesPerTie: 3,
+        matchFormat: '6game-noad',
+        allowMixedOverflow: true,
+        eventFormat: 'tb-7',
+      }, opts.config || {}),
+      data: null,
+      warnings: [],
+    };
+  }
+
+  function seedDemoTournaments() {
+    // 1. Tournament demo (12 players -> 6 teams, 1 group bracket with BYEs)
+    const t1 = createTournamentObject({
+      name: '봄 정기 복식 토너먼트',
+      type: 'tournament',
+      players: makeSampleRoster(12),
+      config: { teamMode: 'mixed', pairingStrategy: 'balanced', groupCount: 1, groupMode: 'skill-tier', matchFormat: '6game-noad' },
+    });
+    const r1 = E.generateTournament(t1.players, { ...t1.config, levels: t1.skillLevels });
+    t1.data = { groups: r1.groups, teams: r1.teams, leftovers: r1.leftovers };
+    t1.warnings = r1.warnings;
+    // Pre-fill 1 completed match for visual clarity
+    const firstPending = t1.data.groups[0]?.rounds[0]?.matches.find((m) => m.status === 'pending');
+    if (firstPending) {
+      firstPending.scoreA = 6;
+      firstPending.scoreB = 4;
+      firstPending.status = 'completed';
+      firstPending.winnerSide = 'A';
+      E.propagateBracketWinners(t1.data.groups[0].rounds);
+    }
+
+    // 2. Individual KDK demo (7 players -> odd count rotation!)
+    const t2 = createTournamentObject({
+      name: '주말 KDK 개인전',
+      type: 'individual',
+      players: makeSampleRoster(7),
+      config: { teamMode: 'mixed', groupCount: 1, groupMode: 'balanced', gamesPerPlayer: 4, matchFormat: '6game-draw' },
+    });
+    const r2 = E.generateIndividualMode(t2.players, { ...t2.config, levels: t2.skillLevels });
+    t2.data = { groups: r2.groups };
+    t2.warnings = r2.warnings;
+    if (t2.data.groups[0]?.matches.length >= 2) {
+      t2.data.groups[0].matches[0].scoreA = 6;
+      t2.data.groups[0].matches[0].scoreB = 3;
+      t2.data.groups[0].matches[0].status = 'completed';
+      t2.data.groups[0].matches[1].scoreA = 5;
+      t2.data.groups[0].matches[1].scoreB = 5;
+      t2.data.groups[0].matches[1].status = 'completed';
+    }
+
+    // 3. Group Match demo (12 players -> 2 balanced groups, 3 doubles per tie)
+    const t3 = createTournamentObject({
+      name: '클럽 대항 그룹전',
+      type: 'group',
+      players: makeSampleRoster(12),
+      config: { teamMode: 'mixed', groupCount: 2, gamesPerTie: 3, matchFormat: '6game-noad' },
+    });
+    const r3 = E.generateGroupMode(t3.players, { ...t3.config, levels: t3.skillLevels });
+    t3.data = { groups: r3.groups, ties: r3.ties, gamesPerTie: r3.gamesPerTie };
+    t3.warnings = r3.warnings;
+
+    state.tournaments = [t1, t2, t3];
+    state.activeTournamentId = t1.id;
+    state.activeSection = 'matches';
+    saveState();
+  }
+
+  // --- Core Actions ---
+  function generateDrawForActive() {
+    const t = getActiveTournament();
+    if (!t) return;
+    const cfg = { ...t.config, levels: t.skillLevels };
+
+    if (t.type === 'tournament') {
+      const res = E.generateTournament(t.players, cfg);
+      t.data = { groups: res.groups, teams: res.teams, leftovers: res.leftovers };
+      t.warnings = res.warnings;
+    } else if (t.type === 'individual') {
+      const res = E.generateIndividualMode(t.players, cfg);
+      t.data = { groups: res.groups };
+      t.warnings = res.warnings;
+    } else if (t.type === 'group') {
+      const res = E.generateGroupMode(t.players, cfg);
+      t.data = { groups: res.groups, ties: res.ties, gamesPerTie: res.gamesPerTie };
+      t.warnings = res.warnings;
+    } else if (t.type === 'event') {
+      const fmt = E.MATCH_FORMATS[t.config.eventFormat] || E.MATCH_FORMATS['tb-7'];
+      const res = E.generateEventRound(t.players, [], {
+        teamMode: t.config.teamMode,
+        pairingStrategy: t.config.pairingStrategy,
+        levels: t.skillLevels,
+        formatLabel: fmt.label,
+      });
+      t.data = { matches: res.newMatches, resting: res.resting };
+      t.warnings = res.warnings;
+    }
+
+    state.activeGroupTab = 0;
+    state.activeSection = 'matches';
+    saveState();
+    render();
+    toast('대진표가 생성되었습니다.');
+  }
+
+  function addEventRound() {
+    const t = getActiveTournament();
+    if (!t || t.type !== 'event') return;
+    if (!t.data) t.data = { matches: [], resting: [] };
+    const fmt = E.MATCH_FORMATS[t.config.eventFormat] || E.MATCH_FORMATS['tb-7'];
+    const res = E.generateEventRound(t.players, t.data.matches, {
+      teamMode: t.config.teamMode,
+      pairingStrategy: t.config.pairingStrategy,
+      levels: t.skillLevels,
+      formatLabel: fmt.label,
+    });
+    t.data.matches.push(...res.newMatches);
+    t.data.resting = res.resting;
+    t.warnings = res.warnings;
+    saveState();
+    render();
+    if (res.newMatches.length > 0) toast(`이벤트 경기 ${res.newMatches.length}개가 추가되었습니다.`);
+  }
+
+  function syncGroupLineupToTies(t, groupId) {
+    if (!t.data || !t.data.groups || !t.data.ties) return;
+    const grp = t.data.groups.find((g) => g.id === groupId);
+    if (!grp) return;
+    t.data.ties.forEach((tie) => {
+      tie.matches.forEach((m, idx) => {
+        if (m.status !== 'pending') return;
+        const slot = grp.lineup[idx];
+        if (!slot) return;
+        if (tie.groupAId === groupId) {
+          m.teamAPlayers = [slot.p1Id, slot.p2Id];
+        }
+        if (tie.groupBId === groupId) {
+          m.teamBPlayers = [slot.p1Id, slot.p2Id];
+        }
+      });
+    });
+  }
+
+  function updateScore(matchRef, side, rawVal, tournament) {
+    const val = rawVal === '' ? null : Math.max(0, parseInt(rawVal, 10));
+    if (side === 'A') matchRef.scoreA = isNaN(val) ? null : val;
+    if (side === 'B') matchRef.scoreB = isNaN(val) ? null : val;
+
+    if (matchRef.scoreA !== null && matchRef.scoreB !== null) {
+      const fmt = E.MATCH_FORMATS[tournament.config.matchFormat] || E.MATCH_FORMATS['6game-noad'];
+      if (tournament.type === 'tournament' && matchRef.scoreA === matchRef.scoreB) {
+        // In single-elimination tournament, tie cannot advance
+        matchRef.status = 'pending';
+        matchRef.winnerSide = null;
+        matchRef.note = '토너먼트는 동점 불가 (타이브레이크 승자 입력)';
+      } else {
+        matchRef.status = 'completed';
+        matchRef.note = '';
+        if (tournament.type === 'tournament') {
+          matchRef.winnerSide = matchRef.scoreA > matchRef.scoreB ? 'A' : 'B';
+        }
+        if (matchRef.scoreA === matchRef.scoreB && !fmt.allowDraw) {
+          matchRef.note = '무승부 기록됨 (승점 0)';
+        }
+      }
+    } else {
+      if (matchRef.status !== 'bye') {
+        matchRef.status = 'pending';
+        if (tournament.type === 'tournament') matchRef.winnerSide = null;
+      }
+    }
+
+    if (tournament.type === 'tournament' && tournament.data && tournament.data.groups) {
+      const grp = tournament.data.groups.find((g) => g.id === matchRef.groupId);
+      if (grp) E.propagateBracketWinners(grp.rounds);
+    }
+
+    saveState();
+    render();
+  }
+
+  // --- Excel / CSV Import & Export ---
+  function handleFileImport(file) {
+    const t = getActiveTournament();
+    if (!t || !file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (window.XLSX && (ext === 'xlsx' || ext === 'xls' || ext === 'csv')) {
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = window.XLSX.read(data, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const rows = window.XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          importRosterRows(t, rows);
+        } catch (err) {
+          toast('파일을 읽는 중 오류가 발생했습니다: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      // Native CSV fallback
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const text = String(evt.target.result || '');
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        if (lines.length < 2) {
+          toast('CSV 데이터가 비어 있습니다.');
+          return;
+        }
+        const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+        const rows = lines.slice(1).map((line) => {
+          const cols = line.split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+          const obj = {};
+          headers.forEach((h, i) => (obj[h] = cols[i] || ''));
+          return obj;
+        });
+        importRosterRows(t, rows);
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+  }
+
+  function importRosterRows(t, rows) {
+    const defaultSkill = t.skillLevels[Math.floor(t.skillLevels.length / 2)]?.code || 'C';
+    let added = 0;
+
+    rows.forEach((row) => {
+      const keys = Object.keys(row);
+      const findVal = (patterns) => {
+        const k = keys.find((key) => patterns.some((p) => key.toLowerCase().includes(p)));
+        return k ? String(row[k]).trim() : '';
+      };
+      const name = findVal(['이름', '성명', '선수', '참가자', 'name']);
+      if (!name) return;
+      const rawGender = findVal(['성별', 'gender', 'sex']);
+      const rawSkill = findVal(['실력', '등급', '레벨', 'ntrp', '부서', 'skill', 'level', 'grade']);
+
+      t.players.push({
+        id: E.uid('p'),
+        name,
+        gender: E.normalizeGender(rawGender),
+        skill: rawSkill || defaultSkill,
+        status: 'active',
+      });
+      added++;
+    });
+
+    if (added > 0) {
+      saveState();
+      render();
+      toast(`참가자 ${added}명이 명단에 추가되었습니다.`);
+    } else {
+      toast('유효한 참가자 행을 찾지 못했습니다. (헤더: 이름, 성별, 실력등급)');
+    }
+  }
+
+  function downloadExcelTemplate() {
+    const t = getActiveTournament();
+    const lvls = (t && t.skillLevels) || E.SKILL_PRESETS.abcde.levels;
+    const sampleData = [
+      { 이름: '김민수', 성별: '남', 실력등급: lvls[0]?.code || 'A' },
+      { 이름: '이지영', 성별: '여', 실력등급: lvls[1]?.code || 'B' },
+      { 이름: '박준혁', 성별: '남', 실력등급: lvls[2]?.code || 'C' },
+      { 이름: '최수진', 성별: '여', 실력등급: lvls[2]?.code || 'C' },
+    ];
+
+    if (window.XLSX) {
+      const ws = window.XLSX.utils.json_to_sheet(sampleData);
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, '참가자명단');
+      window.XLSX.writeFile(wb, '테니스대회_참가자_업로드양식.xlsx');
+      toast('엑셀 업로드 양식(.xlsx)을 다운로드했습니다.');
+    } else {
+      const csv = '\uFEFF이름,성별,실력등급\n' + sampleData.map((r) => `${r.이름},${r.성별},${r.실력등급}`).join('\n');
+      downloadBlob(csv, '테니스대회_참가자_업로드양식.csv', 'text/csv;charset=utf-8');
+      toast('CSV 업로드 양식을 다운로드했습니다.');
+    }
+  }
+
+  function exportBackupJSON() {
+    const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), tournaments: state.tournaments }, null, 2);
+    downloadBlob(payload, `courtflow_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+    toast('전체 대회 데이터를 JSON으로 백업했습니다.');
+  }
+
+  function importBackupJSON(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        if (parsed && Array.isArray(parsed.tournaments) && parsed.tournaments.length > 0) {
+          state.tournaments = parsed.tournaments;
+          state.activeTournamentId = parsed.tournaments[0].id;
+          saveState();
+          render();
+          toast(`백업 파일에서 대회 ${parsed.tournaments.length}개를 복원했습니다.`);
+        } else {
+          toast('올바른 백업 JSON 형식이 아닙니다.');
+        }
+      } catch (err) {
+        toast('JSON 파싱 오류: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function downloadBlob(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportResultsExcel() {
+    const t = getActiveTournament();
+    if (!t) return;
+    const rows = getExportableStandingsRows(t);
+    if (!rows.length) {
+      toast('내보낼 순위 데이터가 아직 없습니다.');
+      return;
+    }
+    if (window.XLSX) {
+      const ws = window.XLSX.utils.json_to_sheet(rows);
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, '순위표');
+      window.XLSX.writeFile(wb, `${t.name}_결과순위표.xlsx`);
+      toast('순위표를 엑셀(.xlsx)로 내보냈습니다.');
+    } else {
+      const headers = Object.keys(rows[0]);
+      const csv = '\uFEFF' + headers.join(',') + '\n' + rows.map((r) => headers.map((h) => `"${r[h]}"`).join(',')).join('\n');
+      downloadBlob(csv, `${t.name}_결과순위표.csv`, 'text/csv;charset=utf-8');
+      toast('순위표를 CSV로 내보냈습니다.');
+    }
+  }
+
+  function getExportableStandingsRows(t) {
+    const blocks = computeStandingsBlocks(t);
+    const out = [];
+    blocks.forEach((b) => {
+      b.rows.forEach((r) => {
+        out.push({
+          구분: b.title,
+          순위: r.rank,
+          이름: r.name,
+          경기수: r.played,
+          승: r.wins,
+          무: r.draws,
+          패: r.losses,
+          승점: r.points,
+          총득점: r.totalScored,
+          총실점: r.totalConceded,
+          득실차: r.scoreDiff,
+        });
+      });
+    });
+    return out;
+  }
+
+  // --- Standings Computation per Mode ---
+  function computeStandingsBlocks(t) {
+    if (!t || !t.data) return [];
+
+    if (t.type === 'tournament' && t.data.groups) {
+      return t.data.groups.map((g) => {
+        const entities = g.teams.map((tm) => ({
+          id: tm.id,
+          name: tm.name,
+          meta: tm.isMixedOverflow ? '혼성 보정' : E.teamTypeLabel(tm.division),
+        }));
+        const matches = [];
+        g.rounds.forEach((r) =>
+          r.matches.forEach((m) => {
+            if ((m.status === 'completed' || m.status === 'walkover') && m.teamA && m.teamB) {
+              matches.push({
+                sideAIds: [m.teamA.id],
+                sideBIds: [m.teamB.id],
+                scoreA: m.scoreA,
+                scoreB: m.scoreB,
+                status: m.status,
+              });
+            }
+          })
+        );
+        return { title: `${g.name} 팀 순위`, rows: E.computeStandings(entities, matches) };
+      });
+    }
+
+    if (t.type === 'individual' && t.data.groups) {
+      return t.data.groups.map((g) => {
+        const entities = g.players.map((p) => ({
+          id: p.id,
+          name: p.name,
+          meta: `${E.genderLabel(p.gender)} · ${p.skill}`,
+        }));
+        const matches = g.matches.map((m) => ({
+          sideAIds: m.teamA.players,
+          sideBIds: m.teamB.players,
+          scoreA: m.scoreA,
+          scoreB: m.scoreB,
+          status: m.status,
+        }));
+        return { title: `${g.name} 개인 순위`, rows: E.computeStandings(entities, matches) };
+      });
+    }
+
+    if (t.type === 'group' && t.data.groups) {
+      const grpEntities = t.data.groups.map((g) => ({
+        id: g.id,
+        name: g.name,
+        meta: `${g.members.length}명 (평균 ${g.avgWeight})`,
+      }));
+      const grpMatches = [];
+      const playerMatches = [];
+      (t.data.ties || []).forEach((tie) => {
+        tie.matches.forEach((m) => {
+          grpMatches.push({
+            sideAIds: [tie.groupAId],
+            sideBIds: [tie.groupBId],
+            scoreA: m.scoreA,
+            scoreB: m.scoreB,
+            status: m.status,
+          });
+          playerMatches.push({
+            sideAIds: m.teamAPlayers.filter(Boolean),
+            sideBIds: m.teamBPlayers.filter(Boolean),
+            scoreA: m.scoreA,
+            scoreB: m.scoreB,
+            status: m.status,
+          });
+        });
+      });
+
+      const allPlayers = [];
+      t.data.groups.forEach((g) =>
+        g.members.forEach((m) =>
+          allPlayers.push({ id: m.id, name: m.name, meta: `${g.name} · ${E.genderLabel(m.gender)} · ${m.skill}` })
+        )
+      );
+
+      return [
+        { title: '그룹 종합 순위 (전 경기 합산)', rows: E.computeStandings(grpEntities, grpMatches) },
+        { title: '개인 기여도 순위', rows: E.computeStandings(allPlayers, playerMatches) },
+      ];
+    }
+
+    if (t.type === 'event' && t.data.matches) {
+      const entities = t.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        meta: `${E.genderLabel(p.gender)} · ${p.skill}`,
+      }));
+      const matches = t.data.matches.map((m) => ({
+        sideAIds: m.teamA.players,
+        sideBIds: m.teamB.players,
+        scoreA: m.scoreA,
+        scoreB: m.scoreB,
+        status: m.status,
+      }));
+      return [{ title: '이벤트 개인 종합 순위', rows: E.computeStandings(entities, matches) }];
+    }
+
+    return [];
+  }
+
+  // --- Rendering ---
+  function render() {
+    const app = document.getElementById('app');
+    if (!app) return;
+    const t = getActiveTournament();
+
+    app.innerHTML = `
+      ${renderHeader(t)}
+      <main class="main-container">
+        ${t ? renderTournamentWorkspace(t) : renderNoTournament()}
+      </main>
+      ${renderModal(t)}
+      <div id="toast-container" class="toast-container"></div>
+    `;
+
+    bindEvents(t);
+  }
+
+  function renderHeader(activeT) {
+    const tabsHtml = state.tournaments
+      .map((t) => {
+        const meta = typeMeta(t.type);
+        const prog = getTournamentProgress(t);
+        const isActive = activeT && t.id === activeT.id;
+        return `
+          <button class="t-tab ${isActive ? 'active' : ''}" data-action="switch-tournament" data-id="${t.id}">
+            <span>${meta.icon}</span>
+            <span>${esc(t.name)}</span>
+            <span class="t-tab-badge">${esc(prog.statusLabel)}</span>
+          </button>
+        `;
+      })
+      .join('');
+
+    return `
+      <header class="app-header">
+        <div class="header-top">
+          <div class="brand">
+            <div class="brand-mark">🎾</div>
+            <div>
+              <h1 class="brand-title">CourtFlow 테니스 대회 매니저</h1>
+              <div class="brand-sub">복식 전용 · 토너먼트 · 개인전(KDK) · 그룹전 · 이벤트 통합 운영</div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-ghost-light btn-sm" data-action="open-backup-import">📂 백업 복원</button>
+            <input type="file" id="json-backup-input" accept=".json" style="display:none" />
+            <button class="btn btn-ghost-light btn-sm" data-action="export-backup">💾 전체 백업</button>
+            <button class="btn btn-clay btn-sm" data-action="open-new-tournament">+ 새 대회</button>
+          </div>
+        </div>
+        <div class="tournament-tabs-bar">
+          <div class="tournament-tabs-inner">
+            ${tabsHtml}
+            <button class="t-tab t-tab-add" data-action="open-new-tournament">+ 대회 탭 추가</button>
+          </div>
+        </div>
+      </header>
+    `;
+  }
+
+  function renderNoTournament() {
+    return `
+      <div class="card empty-state">
+        <div class="empty-state-icon">🎾</div>
+        <h2>진행 중인 대회가 없습니다</h2>
+        <p>새 대회를 만들어 참가자 명단을 등록하고 대진표를 구성해보세요.</p>
+        <button class="btn btn-primary" data-action="open-new-tournament">+ 새 대회 만들기</button>
+      </div>
+    `;
+  }
+
+  function renderTournamentWorkspace(t) {
+    const meta = typeMeta(t.type);
+    const activePlayers = E.getActivePlayers(t.players);
+    const menCnt = activePlayers.filter((p) => p.gender === 'M').length;
+    const womenCnt = activePlayers.filter((p) => p.gender === 'F').length;
+    const withdrawnCnt = t.players.length - activePlayers.length;
+    const prog = getTournamentProgress(t);
+    const fmt = E.MATCH_FORMATS[t.config.matchFormat] || E.MATCH_FORMATS['6game-noad'];
+
+    return `
+      <section class="tournament-banner">
+        <div class="tournament-banner-left">
+          <div class="tournament-title-row">
+            <span class="badge badge-green">${meta.icon} ${meta.label}</span>
+            <input type="text" class="tournament-name-input" id="tournament-name-input" value="${esc(t.name)}" aria-label="대회 이름" />
+          </div>
+          <div class="tournament-meta-row">
+            <span>팀 구성: <strong>${E.teamTypeLabel(t.config.teamMode)}</strong></span>
+            <span>·</span>
+            <span>경기 방식: <strong>${esc(fmt.label)}</strong></span>
+            <span>·</span>
+            <span>승점 규칙: <strong>승 +1 / 무 0 / 패 -1 (동점 시 총득점)</strong></span>
+          </div>
+        </div>
+        <div class="tournament-stats">
+          <div class="stat-chip">
+            <span class="stat-chip-label">참가 인원</span>
+            <span class="stat-chip-val">${activePlayers.length}명</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-chip-label">성별 (남/여)</span>
+            <span class="stat-chip-val">${menCnt} / ${womenCnt}</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-chip-label">경기 진행</span>
+            <span class="stat-chip-val">${prog.done} / ${prog.total}</span>
+          </div>
+          ${withdrawnCnt > 0 ? `
+            <div class="stat-chip" style="border-color:var(--danger-border);background:var(--danger-bg);">
+              <span class="stat-chip-label" style="color:var(--danger-text);">불참/기권</span>
+              <span class="stat-chip-val" style="color:var(--danger-text);">${withdrawnCnt}명</span>
+            </div>
+          ` : ''}
+          <button class="btn btn-danger-soft btn-sm" data-action="delete-tournament" title="현재 대회 탭 삭제">대회 삭제</button>
+        </div>
+      </section>
+
+      <nav class="section-nav" aria-label="대회 운영 단계">
+        <button class="sec-btn ${state.activeSection === 'roster' ? 'active' : ''}" data-action="switch-section" data-sec="roster">
+          <span class="sec-step">1</span> 참가자 접수 (${activePlayers.length})
+        </button>
+        <button class="sec-btn ${state.activeSection === 'setup' ? 'active' : ''}" data-action="switch-section" data-sec="setup">
+          <span class="sec-step">2</span> 대회 설정 & 대진 생성
+        </button>
+        <button class="sec-btn ${state.activeSection === 'matches' ? 'active' : ''}" data-action="switch-section" data-sec="matches">
+          <span class="sec-step">3</span> 경기 진행 & 스코어
+        </button>
+        <button class="sec-btn ${state.activeSection === 'standings' ? 'active' : ''}" data-action="switch-section" data-sec="standings">
+          <span class="sec-step">4</span> 순위 & 승점표
+        </button>
+      </nav>
+
+      ${state.activeSection === 'roster' ? renderRosterSection(t) : ''}
+      ${state.activeSection === 'setup' ? renderSetupSection(t) : ''}
+      ${state.activeSection === 'matches' ? renderMatchesSection(t) : ''}
+      ${state.activeSection === 'standings' ? renderStandingsSection(t) : ''}
+    `;
+  }
+
+  // --- SECTION 1: ROSTER ---
+  function renderRosterSection(t) {
+    const levelOptions = t.skillLevels
+      .map((l) => `<option value="${esc(l.code)}">${esc(l.label)}</option>`)
+      .join('');
+
+    const rowsHtml = t.players.length
+      ? t.players
+          .map((p, idx) => {
+            const isWithdrawn = p.status === 'withdrawn';
+            return `
+              <tr class="${isWithdrawn ? 'row-withdrawn' : ''}">
+                <td class="num" style="width:46px;text-align:center;">${idx + 1}</td>
+                <td><strong>${esc(p.name)}</strong> ${isWithdrawn ? '<span class="badge badge-danger">불참</span>' : ''}</td>
+                <td>
+                  <span class="badge ${p.gender === 'F' ? 'badge-women' : 'badge-men'}">
+                    ${p.gender === 'F' ? '여성' : '남성'}
+                  </span>
+                </td>
+                <td>
+                  <select class="select" style="width:auto;padding:4px 8px;font-size:12.5px;" data-action="change-player-skill" data-pid="${p.id}">
+                    ${t.skillLevels.map((l) => `<option value="${esc(l.code)}" ${l.code === p.skill ? 'selected' : ''}>${esc(l.label)}</option>`).join('')}
+                  </select>
+                </td>
+                <td class="num" style="text-align:center;">${E.getSkillWeight(p.skill, t.skillLevels)}</td>
+                <td style="text-align:right;white-space:nowrap;">
+                  ${isWithdrawn
+                    ? `<button class="btn btn-sm" data-action="restore-player" data-pid="${p.id}">복귀</button>`
+                    : `<button class="btn btn-sm" data-action="open-incident" data-pid="${p.id}">돌발 불참/대체</button>`
+                  }
+                  <button class="btn btn-danger-soft btn-sm" data-action="remove-player" data-pid="${p.id}">삭제</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('')
+      : `<tr><td colspan="6" class="empty-state">아직 등록된 참가자가 없습니다. 위 입력창이나 엑셀 업로드로 명단을 등록하세요.</td></tr>`;
+
+    return `
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">직접 참가자 등록</h2>
+              <p class="card-desc">지원자의 이름, 성별, 실력등급을 입력하여 즉시 명단에 추가합니다.</p>
+            </div>
+            <button class="btn btn-sm" data-action="open-skill-config">⚙️ 실력등급 체계 설정</button>
+          </div>
+          <form id="add-player-form" class="form-row">
+            <div class="field" style="flex:1.4;">
+              <label for="p-name">이름</label>
+              <input id="p-name" class="input" type="text" placeholder="예: 홍길동" required />
+            </div>
+            <div class="field" style="flex:0.8;min-width:95px;">
+              <label for="p-gender">성별</label>
+              <select id="p-gender" class="select">
+                <option value="M">남성</option>
+                <option value="F">여성</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1.1;">
+              <label for="p-skill">실력등급</label>
+              <select id="p-skill" class="select">${levelOptions}</select>
+            </div>
+            <button type="submit" class="btn btn-primary">+ 추가</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">엑셀 / CSV 명단 일괄 업로드</h2>
+              <p class="card-desc">컬럼명: <strong>이름</strong>, <strong>성별</strong>(남/여), <strong>실력등급</strong> (xlsx, xls, csv 지원)</p>
+            </div>
+            <button class="btn btn-sm" data-action="download-excel-template">📥 엑셀 양식 다운로드</button>
+          </div>
+          <div id="excel-dropzone" class="dropzone">
+            <div style="font-weight:700;margin-bottom:4px;">📄 클릭하거나 엑셀(.xlsx / .csv) 파일을 여기로 드래그하세요</div>
+            <div style="font-size:12px;color:var(--ink-muted);">현재 설정된 실력등급 체계(${esc(t.skillLevels.map((l) => l.code).join(', '))})에 맞춰 자동 매핑됩니다.</div>
+            <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">접수 명단 (${t.players.length}명)</h2>
+            <p class="card-desc">실력등급은 표에서 바로 변경 가능하며, 갑작스런 불참 시 [돌발 불참/대체]로 대체 선수 투입이나 기권 처리를 할 수 있습니다.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-sm" data-action="add-sample-players">👥 샘플 8명 추가</button>
+            <button class="btn btn-danger-soft btn-sm" data-action="clear-players">명단 초기화</button>
+            <button class="btn btn-primary btn-sm" data-action="switch-section" data-sec="setup">다음: 대회 설정 →</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="center">#</th>
+                <th>이름</th>
+                <th>성별</th>
+                <th>실력등급</th>
+                <th class="center">가중치</th>
+                <th style="text-align:right;">관리</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- SECTION 2: SETUP & DRAW ---
+  function renderSetupSection(t) {
+    const activeCount = E.getActivePlayers(t.players).length;
+    const menCnt = E.getActivePlayers(t.players).filter((p) => p.gender === 'M').length;
+    const womenCnt = E.getActivePlayers(t.players).filter((p) => p.gender === 'F').length;
+
+    const types = [
+      { id: 'tournament', title: '🏆 토너먼트', sub: '팀 구성 > 실력/지정수 그룹 생성 > 각 그룹별 토너먼트(BYE 자동 배치)' },
+      { id: 'individual', title: '🔄 개인전 (KDK)', sub: '그룹 생성 > 적정 게임수 추천/지정 > 파트너 교체 복식 로테이션' },
+      { id: 'group', title: '🛡️ 그룹전 (단체전)', sub: '실력·성별 균등 그룹 배분 > 그룹대표 오더 입력 > 순서별 대항전' },
+      { id: 'event', title: '⚡ 이벤트 매치', sub: '자유 친선/믹스 랜덤 매칭, 타이브레이크·원포인트 등 즉석 경기' },
+    ];
+
+    const teamModes = [
+      { id: 'men', title: '남성복식', sub: `현재 남성 ${menCnt}명 (홀수·여성 혼입 시 유연 보정)` },
+      { id: 'women', title: '여성복식', sub: `현재 여성 ${womenCnt}명 (홀수·남성 혼입 시 유연 보정)` },
+      { id: 'mixed', title: '혼성복식', sub: `남 ${menCnt} / 여 ${womenCnt} (성비 차이 시 자동 보정)` },
+    ];
+
+    // Mode-specific recommendations
+    const perGroupEst = Math.floor(activeCount / Math.max(1, t.config.groupCount));
+    const indRec = E.recommendIndividualGames(perGroupEst);
+    const grpRec = E.recommendGroupGames(activeCount, t.config.groupCount);
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">1. 대회 유형 선택</h2>
+            <p class="card-desc">복식(2인 1팀) 기준으로 각 대회 방식에 맞는 대진 알고리즘이 적용됩니다.</p>
+          </div>
+        </div>
+        <div class="choice-grid">
+          ${types.map((tp) => `
+            <button class="choice-card ${t.type === tp.id ? 'selected' : ''}" data-action="set-type" data-val="${tp.id}">
+              <div class="choice-card-title">${tp.title}</div>
+              <div class="choice-card-sub">${tp.sub}</div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">2. 팀 구성 & 유연 보정 규칙</h2>
+            <p class="card-desc">인원이 홀수이거나 성비가 맞지 않아도 오류 없이 실력·성별 밸런스를 자동 보정합니다.</p>
+          </div>
+        </div>
+        <div class="choice-grid" style="margin-bottom:14px;">
+          ${teamModes.map((tm) => `
+            <button class="choice-card ${t.config.teamMode === tm.id ? 'selected' : ''}" data-action="set-team-mode" data-val="${tm.id}">
+              <div class="choice-card-title">${tm.title}</div>
+              <div class="choice-card-sub">${tm.sub}</div>
+            </button>
+          `).join('')}
+        </div>
+
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink-secondary);">
+          <input type="checkbox" id="chk-mixed-overflow" ${t.config.allowMixedOverflow ? 'checked' : ''} />
+          <span>남성/여성 팀 구성 중 잔여 홀수 인원 발생 시 <strong>혼성 보정팀</strong>으로 유연 편성 허용 (권장)</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">3. 세부 게임 구성 (${typeMeta(t.type).label})</h2>
+            <p class="card-desc">현재 활성 참가자 ${activeCount}명 기준으로 적정 그룹 수와 게임 수를 설정합니다.</p>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:14px;">
+          <div class="field">
+            <label for="cfg-match-format">테니스 공식 경기 규칙</label>
+            <select id="cfg-match-format" class="select">
+              ${Object.values(E.MATCH_FORMATS).map((f) => `
+                <option value="${f.id}" ${t.config.matchFormat === f.id ? 'selected' : ''}>${esc(f.label)}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          ${t.type !== 'event' ? `
+            <div class="field" style="max-width:170px;">
+              <label for="cfg-group-count">생성 그룹 수</label>
+              <select id="cfg-group-count" class="select">
+                ${(t.type === 'group' ? [2, 3, 4, 5, 6] : [1, 2, 3, 4]).map((n) => `
+                  <option value="${n}" ${Number(t.config.groupCount) === n ? 'selected' : ''}>${n}개 그룹</option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          ${(t.type === 'tournament' || t.type === 'individual') ? `
+            <div class="field">
+              <label for="cfg-group-mode">그룹 배분 기준</label>
+              <select id="cfg-group-mode" class="select">
+                <option value="skill-tier" ${t.config.groupMode === 'skill-tier' ? 'selected' : ''}>실력등급별 그룹 (A조 상위권, B조 중위권...)</option>
+                <option value="balanced" ${t.config.groupMode === 'balanced' ? 'selected' : ''}>전 그룹 균등 밸런스 (스네이크 배분)</option>
+              </select>
+            </div>
+          ` : ''}
+
+          ${(t.type === 'tournament' || t.type === 'event') ? `
+            <div class="field">
+              <label for="cfg-pairing-strategy">복식 페어링 전략</label>
+              <select id="cfg-pairing-strategy" class="select">
+                <option value="balanced" ${t.config.pairingStrategy === 'balanced' ? 'selected' : ''}>밸런스 조합 (상위 + 하위 실력 평준화)</option>
+                <option value="similar" ${t.config.pairingStrategy === 'similar' ? 'selected' : ''}>동급 조합 (비슷한 실력끼리 페어)</option>
+              </select>
+            </div>
+          ` : ''}
+
+          ${t.type === 'individual' ? `
+            <div class="field" style="max-width:200px;">
+              <label for="cfg-games-per-player">1인당 적정 게임수</label>
+              <select id="cfg-games-per-player" class="select">
+                ${[2, 3, 4, 5, 6].map((g) => `
+                  <option value="${g}" ${Number(t.config.gamesPerPlayer) === g ? 'selected' : ''}>${g}게임 ${g === indRec.recommended ? '(추천)' : ''}</option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          ${t.type === 'group' ? `
+            <div class="field" style="max-width:200px;">
+              <label for="cfg-games-per-tie">대항전 적정 경기수 (복식)</label>
+              <select id="cfg-games-per-tie" class="select">
+                ${[1, 2, 3, 4, 5, 6, 7].map((g) => `
+                  <option value="${g}" ${Number(t.config.gamesPerTie) === g ? 'selected' : ''}>${g}복식 ${g === grpRec.recommended ? '(추천)' : ''}</option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          ${t.type === 'event' ? `
+            <div class="field">
+              <label for="cfg-event-format">이벤트 라운드 기본 형식</label>
+              <select id="cfg-event-format" class="select">
+                ${Object.values(E.MATCH_FORMATS).map((f) => `
+                  <option value="${f.id}" ${t.config.eventFormat === f.id ? 'selected' : ''}>${esc(f.label)}</option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+        </div>
+
+        ${t.type === 'individual' ? `
+          <div class="alert alert-info">
+            <strong>💡 적정 게임수 추천:</strong> ${esc(indRec.reason)}
+          </div>
+        ` : ''}
+
+        ${t.type === 'group' ? `
+          <div class="alert alert-info">
+            <strong>💡 그룹전 적정 경기수 추천:</strong> ${esc(grpRec.reason)}
+          </div>
+        ` : ''}
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+          <button class="btn" data-action="switch-section" data-sec="roster">← 명단 수정</button>
+          <button class="btn btn-primary" data-action="generate-draw" ${activeCount < 4 ? 'disabled' : ''}>
+            🎾 대진표 자동 생성 (${activeCount}명)
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- SECTION 3: MATCHES ---
+  function renderMatchesSection(t) {
+    if (!t.data) {
+      return `
+        <div class="card empty-state">
+          <div class="empty-state-icon">📋</div>
+          <h3>아직 생성된 대진표가 없습니다</h3>
+          <p>[2. 대회 설정 & 대진 생성]에서 옵션을 확인하고 대진표를 생성하세요.</p>
+          <button class="btn btn-primary" data-action="switch-section" data-sec="setup">대회 설정으로 이동</button>
+        </div>
+      `;
+    }
+
+    const warningsHtml = (t.warnings && t.warnings.length)
+      ? `
+        <div class="alert alert-warn">
+          <strong>⚠️ 밸런스 보정 및 운영 안내</strong>
+          ${t.warnings.map((w) => `<div>• ${esc(w)}</div>`).join('')}
+        </div>
+      `
+      : '';
+
+    const incidentBar = `
+      <div class="card" style="padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:13px;color:var(--ink-secondary);">
+          스코어를 입력하면 <strong>승점(승+1 / 무0 / 패-1)</strong>과 <strong>순위표</strong>가 실시간으로 자동 계산됩니다.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" data-action="open-incident">🚨 갑작스런 불참 / 대체 처리</button>
+          <button class="btn btn-sm" data-action="switch-section" data-sec="standings">📊 순위표 보기 →</button>
+        </div>
+      </div>
+    `;
+
+    let bodyHtml = '';
+    if (t.type === 'tournament') bodyHtml = renderTournamentMatches(t);
+    else if (t.type === 'individual') bodyHtml = renderIndividualMatches(t);
+    else if (t.type === 'group') bodyHtml = renderGroupMatches(t);
+    else if (t.type === 'event') bodyHtml = renderEventMatches(t);
+
+    return `${warningsHtml}${incidentBar}${bodyHtml}`;
+  }
+
+  function renderTournamentMatches(t) {
+    const groups = t.data.groups || [];
+    if (!groups.length) return '<div class="card empty-state">생성된 토너먼트 그룹이 없습니다.</div>';
+
+    const gIdx = Math.min(state.activeGroupTab, groups.length - 1);
+    const activeGroup = groups[gIdx];
+
+    const groupTabs = groups.length > 1
+      ? `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+          ${groups.map((g, idx) => `
+            <button class="btn btn-sm ${idx === gIdx ? 'btn-primary' : ''}" data-action="switch-group-tab" data-idx="${idx}">
+              ${esc(g.name)} (${g.teams.length}팀)
+            </button>
+          `).join('')}
+        </div>`
+      : '';
+
+    const roundsHtml = activeGroup.rounds
+      .map((r) => {
+        const matchesHtml = r.matches
+          .map((m) => {
+            const isBye = m.status === 'bye';
+            const isDone = m.status === 'completed' || m.status === 'walkover';
+            const canEdit = !isBye && m.teamA && m.teamB;
+            return `
+              <div class="bracket-match ${isDone ? 'is-completed' : ''} ${isBye ? 'is-bye' : ''}">
+                <div class="bm-row ${m.winnerSide === 'A' ? 'is-winner' : ''}">
+                  <div class="bm-team ${!m.teamA ? 'empty' : ''}">
+                    ${m.teamA ? esc(m.teamA.name) : '대기 중 (TBD)'}
+                    ${m.teamA?.isMixedOverflow ? '<span class="badge badge-mixed" style="font-size:10px;padding:1px 5px;margin-left:4px;">혼성보정</span>' : ''}
+                  </div>
+                  ${canEdit ? `<input type="number" min="0" max="99" class="bm-score-input" value="${m.scoreA != null ? m.scoreA : ''}" placeholder="-" data-action="score-tournament" data-gid="${activeGroup.id}" data-ridx="${r.roundIndex}" data-mid="${m.id}" data-side="A" />` : ''}
+                </div>
+                <div class="bm-row ${m.winnerSide === 'B' ? 'is-winner' : ''}">
+                  <div class="bm-team ${!m.teamB ? 'empty' : ''}">
+                    ${m.teamB ? esc(m.teamB.name) : (isBye ? 'BYE (부전승)' : '대기 중 (TBD)')}
+                    ${m.teamB?.isMixedOverflow ? '<span class="badge badge-mixed" style="font-size:10px;padding:1px 5px;margin-left:4px;">혼성보정</span>' : ''}
+                  </div>
+                  ${canEdit ? `<input type="number" min="0" max="99" class="bm-score-input" value="${m.scoreB != null ? m.scoreB : ''}" placeholder="-" data-action="score-tournament" data-gid="${activeGroup.id}" data-ridx="${r.roundIndex}" data-mid="${m.id}" data-side="B" />` : ''}
+                </div>
+                <div class="bm-footer">
+                  <span>${m.note ? esc(m.note) : (isDone ? '✅ 경기 완료' : (canEdit ? '스코어 입력 대기' : '이전 라운드 대기'))}</span>
+                  ${canEdit && !isDone ? `
+                    <span style="display:flex;gap:4px;">
+                      <button class="btn btn-sm" style="padding:1px 6px;font-size:10.5px;" data-action="wo-tournament" data-gid="${activeGroup.id}" data-ridx="${r.roundIndex}" data-mid="${m.id}" data-winner="A" title="상단 팀 기권승">상 W/O</button>
+                      <button class="btn btn-sm" style="padding:1px 6px;font-size:10.5px;" data-action="wo-tournament" data-gid="${activeGroup.id}" data-ridx="${r.roundIndex}" data-mid="${m.id}" data-winner="B" title="하단 팀 기권승">하 W/O</button>
+                    </span>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="bracket-round">
+            <div class="bracket-round-title">${esc(r.name)}</div>
+            <div class="bracket-matches">${matchesHtml}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">${esc(activeGroup.name)} 토너먼트 대진표</h2>
+            <p class="card-desc">총 ${activeGroup.teams.length}개 복식 팀 · 스코어 입력 시 승자가 다음 라운드로 자동 진출합니다.</p>
+          </div>
+          ${groupTabs}
+        </div>
+        <div class="bracket-scroll">
+          <div class="bracket-grid">${roundsHtml}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderIndividualMatches(t) {
+    const groups = t.data.groups || [];
+    if (!groups.length) return '<div class="card empty-state">생성된 개인전 그룹이 없습니다.</div>';
+
+    const gIdx = Math.min(state.activeGroupTab, groups.length - 1);
+    const activeGroup = groups[gIdx];
+
+    const groupTabs = groups.length > 1
+      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${groups.map((g, idx) => `
+            <button class="btn btn-sm ${idx === gIdx ? 'btn-primary' : ''}" data-action="switch-group-tab" data-idx="${idx}">
+              ${esc(g.name)} (${g.players.length}명)
+            </button>
+          `).join('')}
+        </div>`
+      : '';
+
+    const cardsHtml = activeGroup.matches
+      .map((m) => {
+        const isDone = m.status === 'completed' || m.status === 'walkover';
+        const winA = isDone && m.scoreA > m.scoreB;
+        const winB = isDone && m.scoreB > m.scoreA;
+        return `
+          <div class="match-card ${isDone ? 'completed' : ''}">
+            <div class="match-card-top">
+              <span><strong>Game ${m.order}</strong> · ${esc(activeGroup.name)}</span>
+              <span>
+                ${m.isMixedOverflow ? '<span class="badge badge-mixed">성별 보정</span>' : ''}
+                ${isDone ? '<span class="badge badge-green">완료</span>' : '<span class="badge badge-neutral">진행대기</span>'}
+              </span>
+            </div>
+            <div class="match-versus">
+              <div class="mv-side ${winA ? 'winner' : ''}">
+                <div class="mv-names">${esc(m.teamA.label)}</div>
+                <div style="font-size:11px;color:var(--ink-muted);">실력합 ${m.teamA.weightSum}</div>
+              </div>
+              <div class="mv-center">
+                <input type="number" min="0" max="99" class="score-box" value="${m.scoreA != null ? m.scoreA : ''}" placeholder="-" data-action="score-individual" data-gid="${activeGroup.id}" data-mid="${m.id}" data-side="A" />
+                <span style="font-weight:700;color:var(--ink-muted);">:</span>
+                <input type="number" min="0" max="99" class="score-box" value="${m.scoreB != null ? m.scoreB : ''}" placeholder="-" data-action="score-individual" data-gid="${activeGroup.id}" data-mid="${m.id}" data-side="B" />
+              </div>
+              <div class="mv-side ${winB ? 'winner' : ''}">
+                <div class="mv-names">${esc(m.teamB.label)}</div>
+                <div style="font-size:11px;color:var(--ink-muted);">실력합 ${m.teamB.weightSum}</div>
+              </div>
+            </div>
+            ${m.note ? `<div style="font-size:11.5px;color:var(--clay);">${esc(m.note)}</div>` : ''}
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">${esc(activeGroup.name)} 파트너 교체 복식 경기 (${activeGroup.matches.length}경기)</h2>
+            <p class="card-desc">참가자 ${activeGroup.players.length}명 · 목표 1인당 ${activeGroup.targetGamesPerPlayer}게임 · 파트너 중복 최소화 및 실력 밸런스 매칭</p>
+          </div>
+          ${groupTabs}
+        </div>
+        <div class="match-list">${cardsHtml}</div>
+      </div>
+    `;
+  }
+
+  function renderGroupMatches(t) {
+    const groups = t.data.groups || [];
+    const ties = t.data.ties || [];
+    if (!groups.length) return '<div class="card empty-state">생성된 그룹전이 없습니다.</div>';
+
+    const playerNameById = {};
+    t.players.forEach((p) => (playerNameById[p.id] = `${p.name}(${p.skill})`));
+    groups.forEach((g) => g.members.forEach((m) => (playerNameById[m.id] = `${m.name}(${m.skill})`)));
+
+    const lineupCards = groups
+      .map((g) => {
+        const memberOpts = g.members
+          .map((m) => `<option value="${m.id}">${esc(m.name)} (${E.genderLabel(m.gender)}·${esc(m.skill)})</option>`)
+          .join('');
+
+        // Count how many times each member appears in lineup
+        const usage = {};
+        g.lineup.forEach((slot) => {
+          if (slot.p1Id) usage[slot.p1Id] = (usage[slot.p1Id] || 0) + 1;
+          if (slot.p2Id) usage[slot.p2Id] = (usage[slot.p2Id] || 0) + 1;
+        });
+
+        const rows = g.lineup
+          .map((slot, sIdx) => {
+            const dupSame = slot.p1Id && slot.p1Id === slot.p2Id;
+            return `
+              <div class="lineup-row">
+                <div style="font-weight:700;font-size:12.5px;color:var(--court-green);">제 ${slot.order}경기</div>
+                <select class="select" style="padding:6px 8px;font-size:12.5px;" data-action="edit-lineup" data-gid="${g.id}" data-sidx="${sIdx}" data-slot="p1Id">
+                  <option value="">-- 선수 1 --</option>
+                  ${g.members.map((m) => `<option value="${m.id}" ${m.id === slot.p1Id ? 'selected' : ''}>${esc(m.name)} (${m.gender === 'F' ? '여' : '남'}·${esc(m.skill)})</option>`).join('')}
+                </select>
+                <select class="select" style="padding:6px 8px;font-size:12.5px;${dupSame ? 'border-color:var(--danger-text);' : ''}" data-action="edit-lineup" data-gid="${g.id}" data-sidx="${sIdx}" data-slot="p2Id">
+                  <option value="">-- 선수 2 --</option>
+                  ${g.members.map((m) => `<option value="${m.id}" ${m.id === slot.p2Id ? 'selected' : ''}>${esc(m.name)} (${m.gender === 'F' ? '여' : '남'}·${esc(m.skill)})</option>`).join('')}
+                </select>
+              </div>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header" style="margin-bottom:10px;">
+              <div>
+                <h3 class="card-title">${esc(g.name)} <span class="badge badge-neutral">평균 실력 ${g.avgWeight}</span></h3>
+                <p class="card-desc">소속 ${g.members.length}명 · 남 ${g.members.filter((m) => m.gender === 'M').length} / 여 ${g.members.filter((m) => m.gender === 'F').length}</p>
+              </div>
+              <span class="badge ${g.lineupSubmitted ? 'badge-green' : 'badge-clay'}">${g.lineupSubmitted ? '오더 확정됨' : '대표 오더 입력'}</span>
+            </div>
+
+            <div class="form-row" style="margin-bottom:10px;">
+              <div class="field">
+                <label>그룹 대표 (주장)</label>
+                <select class="select" style="padding:6px 8px;font-size:12.5px;" data-action="change-captain" data-gid="${g.id}">
+                  ${g.members.map((m) => `<option value="${m.id}" ${m.id === g.captainId ? 'selected' : ''}>${esc(m.name)} (${esc(m.skill)})</option>`).join('')}
+                </select>
+              </div>
+              <button class="btn btn-sm" data-action="auto-lineup" data-gid="${g.id}">✨ 자동 추천 오더</button>
+              <button class="btn btn-primary btn-sm" data-action="confirm-lineup" data-gid="${g.id}">오더 확정</button>
+            </div>
+
+            <div style="border-top:1px solid var(--border);padding-top:6px;">${rows}</div>
+
+            <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+              ${g.members.map((m) => `
+                <span class="badge badge-neutral" style="font-size:11px;">${esc(m.name)}: ${usage[m.id] || 0}경기</span>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    const tiesHtml = ties
+      .map((tie) => {
+        const gA = groups.find((g) => g.id === tie.groupAId);
+        const gB = groups.find((g) => g.id === tie.groupBId);
+        let winsA = 0, winsB = 0;
+        tie.matches.forEach((m) => {
+          if (m.status === 'completed' || m.status === 'walkover') {
+            if (m.scoreA > m.scoreB) winsA++;
+            else if (m.scoreB > m.scoreA) winsB++;
+          }
+        });
+
+        const matchCards = tie.matches
+          .map((m) => {
+            const isDone = m.status === 'completed' || m.status === 'walkover';
+            const winA = isDone && m.scoreA > m.scoreB;
+            const winB = isDone && m.scoreB > m.scoreA;
+            const labelA = m.teamAPlayers.map((id) => playerNameById[id] || '미정').join(' / ');
+            const labelB = m.teamBPlayers.map((id) => playerNameById[id] || '미정').join(' / ');
+
+            return `
+              <div class="match-card ${isDone ? 'completed' : ''}">
+                <div class="match-card-top">
+                  <span><strong>제 ${m.order}복식</strong></span>
+                  <span>${isDone ? '<span class="badge badge-green">완료</span>' : '<span class="badge badge-neutral">진행대기</span>'}</span>
+                </div>
+                <div class="match-versus">
+                  <div class="mv-side ${winA ? 'winner' : ''}">
+                    <div style="font-size:11px;color:var(--court-green);font-weight:700;">${esc(gA?.name)}</div>
+                    <div class="mv-names">${esc(labelA)}</div>
+                  </div>
+                  <div class="mv-center">
+                    <input type="number" min="0" max="99" class="score-box" value="${m.scoreA != null ? m.scoreA : ''}" placeholder="-" data-action="score-group" data-tid="${tie.id}" data-mid="${m.id}" data-side="A" />
+                    <span style="font-weight:700;color:var(--ink-muted);">:</span>
+                    <input type="number" min="0" max="99" class="score-box" value="${m.scoreB != null ? m.scoreB : ''}" placeholder="-" data-action="score-group" data-tid="${tie.id}" data-mid="${m.id}" data-side="B" />
+                  </div>
+                  <div class="mv-side ${winB ? 'winner' : ''}">
+                    <div style="font-size:11px;color:var(--clay);font-weight:700;">${esc(gB?.name)}</div>
+                    <div class="mv-names">${esc(labelB)}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">대항전 #${tie.order}: ${esc(gA?.name)} vs ${esc(gB?.name)}</h3>
+                <p class="card-desc">총 ${tie.matches.length}복식 진행</p>
+              </div>
+              <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--court-green);">
+                ${winsA} : ${winsB}
+              </div>
+            </div>
+            <div class="match-list">${matchCards}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">그룹별 대표 오더(출전 명단) 입력</h2>
+            <p class="card-desc">각 그룹 대표가 게임 순서(1~${t.data.gamesPerTie}경기)에 맞춰 복식 조를 편성하고 [오더 확정]을 누르면 아래 대항전에 자동 반영됩니다.</p>
+          </div>
+        </div>
+        <div class="grid-2">${lineupCards}</div>
+      </div>
+      ${tiesHtml}
+    `;
+  }
+
+  function renderEventMatches(t) {
+    const matches = (t.data && t.data.matches) || [];
+    const cardsHtml = matches.length
+      ? matches
+          .map((m) => {
+            const isDone = m.status === 'completed' || m.status === 'walkover';
+            const winA = isDone && m.scoreA > m.scoreB;
+            const winB = isDone && m.scoreB > m.scoreA;
+            return `
+              <div class="match-card ${isDone ? 'completed' : ''}">
+                <div class="match-card-top">
+                  <span><strong>Match #${m.order}</strong> · ${esc(m.formatLabel || '이벤트')}</span>
+                  <span>${isDone ? '<span class="badge badge-green">완료</span>' : '<span class="badge badge-neutral">진행대기</span>'}</span>
+                </div>
+                <div class="match-versus">
+                  <div class="mv-side ${winA ? 'winner' : ''}">
+                    <div class="mv-names">${esc(m.teamA.label)}</div>
+                  </div>
+                  <div class="mv-center">
+                    <input type="number" min="0" max="99" class="score-box" value="${m.scoreA != null ? m.scoreA : ''}" placeholder="-" data-action="score-event" data-mid="${m.id}" data-side="A" />
+                    <span style="font-weight:700;color:var(--ink-muted);">:</span>
+                    <input type="number" min="0" max="99" class="score-box" value="${m.scoreB != null ? m.scoreB : ''}" placeholder="-" data-action="score-event" data-mid="${m.id}" data-side="B" />
+                  </div>
+                  <div class="mv-side ${winB ? 'winner' : ''}">
+                    <div class="mv-names">${esc(m.teamB.label)}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join('')
+      : '<div class="empty-state">아직 생성된 이벤트 경기가 없습니다. 아래 버튼으로 라운드를 추가하세요.</div>';
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">자유 이벤트 / 친선 믹스 매치 (${matches.length}경기)</h2>
+            <p class="card-desc">휴식 인원을 우선 배정하여 공평하게 새 라운드를 계속 추가하거나, 원하는 조합으로 즉석 경기를 만들 수 있습니다.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" data-action="add-event-round">+ 다음 라운드 자동 매칭</button>
+            <button class="btn btn-sm" data-action="open-manual-event">+ 수동 즉석 경기 추가</button>
+          </div>
+        </div>
+        <div class="match-list">${cardsHtml}</div>
+      </div>
+    `;
+  }
+
+  // --- SECTION 4: STANDINGS ---
+  function renderStandingsSection(t) {
+    const blocks = computeStandingsBlocks(t);
+    if (!blocks.length) {
+      return `
+        <div class="card empty-state">
+          <div class="empty-state-icon">📊</div>
+          <h3>집계할 경기 데이터가 없습니다</h3>
+          <p>대진표를 생성하고 스코어를 입력하면 실시간 순위표가 표시됩니다.</p>
+        </div>
+      `;
+    }
+
+    const blocksHtml = blocks
+      .map((b) => `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">${esc(b.title)}</h2>
+              <p class="card-desc">승 +1점 · 무승부 0점 · 패 -1점 | 종합 동점 시 <strong>각 게임 스코어 총득점</strong> 우선 (동점 시 득실차 → 다승)</p>
+            </div>
+            <button class="btn btn-sm" data-action="export-results-excel">📥 결과 엑셀 내보내기</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="center" style="width:60px;">순위</th>
+                  <th>선수 / 팀 / 그룹</th>
+                  <th>구분</th>
+                  <th class="num">경기수</th>
+                  <th class="num">승</th>
+                  <th class="num">무</th>
+                  <th class="num">패</th>
+                  <th class="num" style="color:var(--court-green);">승점</th>
+                  <th class="num" style="color:var(--clay);">총득점</th>
+                  <th class="num">총실점</th>
+                  <th class="num">득실차</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${b.rows.map((r) => `
+                  <tr>
+                    <td class="center">
+                      <span class="rank-badge ${r.rank <= 3 ? 'rank-' + r.rank : ''}">${r.rank}</span>
+                    </td>
+                    <td><strong>${esc(r.name)}</strong></td>
+                    <td><span class="badge badge-neutral">${esc(r.meta || '-')}</span></td>
+                    <td class="num">${r.played}</td>
+                    <td class="num">${r.wins}</td>
+                    <td class="num">${r.draws}</td>
+                    <td class="num">${r.losses}</td>
+                    <td class="num" style="font-weight:700;color:var(--court-green);">${r.points > 0 ? '+' + r.points : r.points}</td>
+                    <td class="num" style="font-weight:700;color:var(--clay);">${r.totalScored}</td>
+                    <td class="num">${r.totalConceded}</td>
+                    <td class="num">${r.scoreDiff > 0 ? '+' + r.scoreDiff : r.scoreDiff}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `)
+      .join('');
+
+    return blocksHtml;
+  }
+
+  // --- MODALS ---
+  function renderModal(t) {
+    if (!state.modal) return '';
+
+    if (state.modal.type === 'new-tournament') {
+      return `
+        <div class="modal-backdrop" data-action="close-modal-backdrop">
+          <div class="modal-box">
+            <div class="modal-header">
+              <h3 class="modal-title">🎾 새 테니스 대회 만들기</h3>
+              <button class="btn btn-sm" data-action="close-modal">✕</button>
+            </div>
+            <form id="new-tournament-form">
+              <div class="field" style="margin-bottom:12px;">
+                <label>대회 이름</label>
+                <input id="nt-name" class="input" type="text" placeholder="예: 11월 클럽 친선 복식대회" required />
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label>대회 유형</label>
+                <select id="nt-type" class="select">
+                  <option value="tournament">🏆 토너먼트 (그룹별 토너먼트)</option>
+                  <option value="individual">🔄 개인전 (KDK 파트너 교체 복식)</option>
+                  <option value="group">🛡️ 그룹전 (균등 배분 + 그룹대표 오더 단체전)</option>
+                  <option value="event">⚡ 이벤트 (자유 친선 / 믹스 / 타이브레이크)</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:12px;">
+                <label>기본 팀 구성</label>
+                <select id="nt-team-mode" class="select">
+                  <option value="mixed">혼성복식</option>
+                  <option value="men">남성복식</option>
+                  <option value="women">여성복식</option>
+                </select>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-secondary);cursor:pointer;">
+                <input type="checkbox" id="nt-sample" checked />
+                <span>테스트용 샘플 참가자 8명 미리 채우기</span>
+              </label>
+              <div class="modal-footer">
+                <button type="button" class="btn" data-action="close-modal">취소</button>
+                <button type="submit" class="btn btn-primary">대회 생성</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    if (state.modal.type === 'skill-config' && t) {
+      return `
+        <div class="modal-backdrop" data-action="close-modal-backdrop">
+          <div class="modal-box">
+            <div class="modal-header">
+              <h3 class="modal-title">⚙️ 실력등급 체계 설정</h3>
+              <button class="btn btn-sm" data-action="close-modal">✕</button>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12.5px;font-weight:700;margin-bottom:8px;color:var(--ink-secondary);">프리셋 선택</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${Object.values(E.SKILL_PRESETS).map((pr) => `
+                  <button class="btn btn-sm ${t.skillPresetId === pr.id ? 'btn-primary' : ''}" data-action="apply-skill-preset" data-preset="${pr.id}">
+                    ${esc(pr.name)}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            <div style="font-size:12.5px;font-weight:700;margin-bottom:6px;color:var(--ink-secondary);">커스텀 등급 직접 입력 (한 줄에 "코드, 설명, 가중치" 형식)</div>
+            <textarea id="custom-skill-text" class="input" rows="6" style="font-family:var(--font-mono);font-size:12.5px;">${t.skillLevels.map((l) => `${l.code}, ${l.label}, ${l.weight}`).join('\n')}</textarea>
+            <div class="modal-footer">
+              <button class="btn" data-action="close-modal">닫기</button>
+              <button class="btn btn-primary" data-action="save-custom-skills">등급 저장</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (state.modal.type === 'incident' && t) {
+      const activePlayers = E.getActivePlayers(t.players);
+      const prePid = state.modal.payload?.pid || (activePlayers[0] ? activePlayers[0].id : '');
+      return `
+        <div class="modal-backdrop" data-action="close-modal-backdrop">
+          <div class="modal-box">
+            <div class="modal-header">
+              <h3 class="modal-title">🚨 갑작스런 불참 / 대체 선수 처리</h3>
+              <button class="btn btn-sm" data-action="close-modal">✕</button>
+            </div>
+            <div class="field" style="margin-bottom:12px;">
+              <label>불참 / 기권 선수 선택</label>
+              <select id="inc-player" class="select">
+                ${activePlayers.map((p) => `<option value="${p.id}" ${p.id === prePid ? 'selected' : ''}>${esc(p.name)} (${E.genderLabel(p.gender)}·${esc(p.skill)})</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="card" style="padding:14px;background:var(--bg-subtle);margin-bottom:12px;">
+              <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">방법 1. 대체 선수(게스트) 즉시 투입</div>
+              <div class="form-row">
+                <div class="field">
+                  <label>대체 선수 이름</label>
+                  <input id="inc-sub-name" class="input" type="text" placeholder="예: 김대타" />
+                </div>
+                <div class="field" style="max-width:90px;">
+                  <label>성별</label>
+                  <select id="inc-sub-gender" class="select"><option value="M">남성</option><option value="F">여성</option></select>
+                </div>
+                <div class="field" style="max-width:110px;">
+                  <label>등급</label>
+                  <select id="inc-sub-skill" class="select">
+                    ${t.skillLevels.map((l) => `<option value="${esc(l.code)}">${esc(l.code)}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:10px;" data-action="exec-substitute">대체 선수 투입 (미진행 경기 자동 교체)</button>
+            </div>
+
+            <div class="card" style="padding:14px;background:var(--danger-bg);border-color:var(--danger-border);margin-bottom:0;">
+              <div style="font-weight:700;font-size:13.5px;color:var(--danger-text);margin-bottom:6px;">방법 2. 불참 기권(W/O) 처리</div>
+              <p style="margin:0 0 10px;font-size:12.5px;color:var(--ink-secondary);">해당 선수의 남은 미진행 경기를 상대방 기권승(W/O)으로 처리하고, 토너먼트인 경우 상대를 다음 라운드로 자동 진출시킵니다.</p>
+              <button class="btn btn-danger-soft btn-sm" data-action="exec-walkover">불참 확정 및 남은 경기 기권(W/O) 처리</button>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn" data-action="close-modal">닫기</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (state.modal.type === 'manual-event' && t) {
+      const activePlayers = E.getActivePlayers(t.players);
+      const opts = activePlayers.map((p) => `<option value="${p.id}">${esc(p.name)} (${p.gender === 'F' ? '여' : '남'}·${esc(p.skill)})</option>`).join('');
+      return `
+        <div class="modal-backdrop" data-action="close-modal-backdrop">
+          <div class="modal-box">
+            <div class="modal-header">
+              <h3 class="modal-title">⚡ 수동 즉석 이벤트 경기 추가</h3>
+              <button class="btn btn-sm" data-action="close-modal">✕</button>
+            </div>
+            <form id="manual-event-form">
+              <div class="grid-2" style="margin-bottom:12px;">
+                <div class="field"><label>A팀 선수 1</label><select id="me-a1" class="select">${opts}</select></div>
+                <div class="field"><label>A팀 선수 2</label><select id="me-a2" class="select">${opts}</select></div>
+                <div class="field"><label>B팀 선수 1</label><select id="me-b1" class="select">${opts}</select></div>
+                <div class="field"><label>B팀 선수 2</label><select id="me-b2" class="select">${opts}</select></div>
+              </div>
+              <div class="field">
+                <label>경기 방식 메모</label>
+                <input id="me-label" class="input" type="text" value="7점 타이브레이크 친선전" />
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn" data-action="close-modal">취소</button>
+                <button type="submit" class="btn btn-primary">경기 추가</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    return '';
+  }
+
+  // --- Event Binding ---
+  function bindEvents(t) {
+    // Click delegation
+    document.getElementById('app').onclick = function (e) {
+      const target = e.target.closest('[data-action]');
+      if (!target) return;
+      const act = target.dataset.action;
+
+      if (act === 'close-modal-backdrop' && e.target !== target) return;
+
+      switch (act) {
+        case 'switch-tournament':
+          state.activeTournamentId = target.dataset.id;
+          state.activeGroupTab = 0;
+          saveState();
+          render();
+          break;
+        case 'switch-section':
+          state.activeSection = target.dataset.sec;
+          render();
+          break;
+        case 'switch-group-tab':
+          state.activeGroupTab = Number(target.dataset.idx) || 0;
+          render();
+          break;
+        case 'open-new-tournament':
+          state.modal = { type: 'new-tournament' };
+          render();
+          break;
+        case 'open-skill-config':
+          state.modal = { type: 'skill-config' };
+          render();
+          break;
+        case 'open-incident':
+          state.modal = { type: 'incident', payload: { pid: target.dataset.pid } };
+          render();
+          break;
+        case 'open-manual-event':
+          state.modal = { type: 'manual-event' };
+          render();
+          break;
+        case 'close-modal':
+        case 'close-modal-backdrop':
+          state.modal = null;
+          render();
+          break;
+        case 'delete-tournament':
+          if (!t) return;
+          if (confirm(`"${t.name}" 대회 탭을 삭제하시겠습니까?`)) {
+            state.tournaments = state.tournaments.filter((x) => x.id !== t.id);
+            state.activeTournamentId = state.tournaments[0]?.id || null;
+            saveState();
+            render();
+            toast('대회가 삭제되었습니다.');
+          }
+          break;
+        case 'remove-player':
+          if (!t) return;
+          t.players = t.players.filter((p) => p.id !== target.dataset.pid);
+          saveState();
+          render();
+          break;
+        case 'restore-player':
+          if (!t) return;
+          const rp = t.players.find((p) => p.id === target.dataset.pid);
+          if (rp) rp.status = 'active';
+          saveState();
+          render();
+          toast('선수가 참가 상태로 복귀했습니다.');
+          break;
+        case 'add-sample-players':
+          if (!t) return;
+          t.players.push(...makeSampleRoster(8));
+          saveState();
+          render();
+          toast('샘플 참가자 8명이 추가되었습니다.');
+          break;
+        case 'clear-players':
+          if (!t) return;
+          if (confirm('참가자 명단을 모두 비우시겠습니까?')) {
+            t.players = [];
+            t.data = null;
+            t.warnings = [];
+            saveState();
+            render();
+          }
+          break;
+        case 'download-excel-template':
+          downloadExcelTemplate();
+          break;
+        case 'export-backup':
+          exportBackupJSON();
+          break;
+        case 'open-backup-import':
+          document.getElementById('json-backup-input')?.click();
+          break;
+        case 'export-results-excel':
+          exportResultsExcel();
+          break;
+        case 'set-type':
+          if (!t) return;
+          t.type = target.dataset.val;
+          if (t.type === 'group' && t.config.groupCount < 2) t.config.groupCount = 2;
+          saveState();
+          render();
+          break;
+        case 'set-team-mode':
+          if (!t) return;
+          t.config.teamMode = target.dataset.val;
+          saveState();
+          render();
+          break;
+        case 'generate-draw':
+          generateDrawForActive();
+          break;
+        case 'add-event-round':
+          addEventRound();
+          break;
+        case 'wo-tournament': {
+          if (!t || !t.data) return;
+          const g = t.data.groups.find((x) => x.id === target.dataset.gid);
+          const r = g?.rounds[Number(target.dataset.ridx)];
+          const m = r?.matches.find((x) => x.id === target.dataset.mid);
+          if (m) {
+            const wo = (E.MATCH_FORMATS[t.config.matchFormat] || E.MATCH_FORMATS['6game-noad']).walkoverScore;
+            if (target.dataset.winner === 'A') {
+              m.scoreA = wo; m.scoreB = 0; m.winnerSide = 'A';
+            } else {
+              m.scoreA = 0; m.scoreB = wo; m.winnerSide = 'B';
+            }
+            m.status = 'walkover';
+            m.note = '기권승 (W/O)';
+            E.propagateBracketWinners(g.rounds);
+            saveState();
+            render();
+            toast('기권승(W/O) 처리 및 다음 라운드 진출이 반영되었습니다.');
+          }
+          break;
+        }
+        case 'auto-lineup': {
+          if (!t || !t.data) return;
+          const g = t.data.groups.find((x) => x.id === target.dataset.gid);
+          if (g) {
+            g.lineup = E.buildAutoLineupForGroup(g.members, t.data.gamesPerTie, t.config.teamMode);
+            syncGroupLineupToTies(t, g.id);
+            saveState();
+            render();
+            toast(`${g.name} 추천 오더가 자동 채워졌습니다.`);
+          }
+          break;
+        }
+        case 'confirm-lineup': {
+          if (!t || !t.data) return;
+          const g = t.data.groups.find((x) => x.id === target.dataset.gid);
+          if (g) {
+            g.lineupSubmitted = true;
+            syncGroupLineupToTies(t, g.id);
+            saveState();
+            render();
+            toast(`${g.name} 오더가 확정되어 대항전에 반영되었습니다.`);
+          }
+          break;
+        }
+        case 'apply-skill-preset': {
+          if (!t) return;
+          const pr = E.SKILL_PRESETS[target.dataset.preset];
+          if (pr) {
+            t.skillPresetId = pr.id;
+            t.skillLevels = JSON.parse(JSON.stringify(pr.levels));
+            saveState();
+            render();
+            toast(`${pr.name} 등급 체계가 적용되었습니다.`);
+          }
+          break;
+        }
+        case 'save-custom-skills': {
+          if (!t) return;
+          const txt = document.getElementById('custom-skill-text')?.value || '';
+          const parsed = txt
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .map((line, i, arr) => {
+              const parts = line.split(',').map((s) => s.trim());
+              return {
+                code: parts[0] || `L${i + 1}`,
+                label: parts[1] || parts[0] || `L${i + 1}`,
+                weight: Number(parts[2]) || (arr.length - i),
+              };
+            });
+          if (parsed.length > 0) {
+            t.skillPresetId = 'custom';
+            t.skillLevels = parsed;
+            state.modal = null;
+            saveState();
+            render();
+            toast('커스텀 실력등급 체계가 저장되었습니다.');
+          }
+          break;
+        }
+        case 'exec-substitute': {
+          if (!t) return;
+          const oldId = document.getElementById('inc-player')?.value;
+          const subName = (document.getElementById('inc-sub-name')?.value || '').trim();
+          const subGender = document.getElementById('inc-sub-gender')?.value || 'M';
+          const subSkill = document.getElementById('inc-sub-skill')?.value || t.skillLevels[0].code;
+          if (!oldId || !subName) {
+            toast('대체 선수 이름을 입력하세요.');
+            return;
+          }
+          const oldP = t.players.find((p) => p.id === oldId);
+          if (oldP) oldP.status = 'withdrawn';
+          const newP = { id: E.uid('p'), name: subName, gender: subGender, skill: subSkill, status: 'active' };
+          t.players.push(newP);
+          const count = E.substitutePlayerInTournament(t, oldId, newP);
+          state.modal = null;
+          saveState();
+          render();
+          toast(`${subName} 선수로 대체 완료 (미진행 경기 ${count}건 자동 반영).`);
+          break;
+        }
+        case 'exec-walkover': {
+          if (!t) return;
+          const pid = document.getElementById('inc-player')?.value;
+          if (!pid) return;
+          const p = t.players.find((x) => x.id === pid);
+          if (p) p.status = 'withdrawn';
+          const woScore = (E.MATCH_FORMATS[t.config.matchFormat] || E.MATCH_FORMATS['6game-noad']).walkoverScore;
+          const affected = E.walkoverPlayerInTournament(t, pid, woScore);
+          state.modal = null;
+          saveState();
+          render();
+          toast(`${p?.name || '선수'} 불참 처리 및 미진행 ${affected}경기 기권승(W/O) 반영 완료.`);
+          break;
+        }
+      }
+    };
+
+    // Change / Input delegation
+    document.getElementById('app').onchange = function (e) {
+      const el = e.target;
+      if (!t && el.id !== 'json-backup-input') return;
+
+      if (el.id === 'json-backup-input') {
+        importBackupJSON(el.files[0]);
+        return;
+      }
+      if (el.id === 'excel-file-input') {
+        handleFileImport(el.files[0]);
+        return;
+      }
+      if (el.id === 'tournament-name-input') {
+        t.name = el.value.trim() || t.name;
+        saveState();
+        render();
+        return;
+      }
+      if (el.id === 'chk-mixed-overflow') {
+        t.config.allowMixedOverflow = el.checked;
+        saveState();
+        return;
+      }
+      if (el.id === 'cfg-match-format') { t.config.matchFormat = el.value; saveState(); render(); return; }
+      if (el.id === 'cfg-group-count') { t.config.groupCount = Number(el.value); saveState(); render(); return; }
+      if (el.id === 'cfg-group-mode') { t.config.groupMode = el.value; saveState(); return; }
+      if (el.id === 'cfg-pairing-strategy') { t.config.pairingStrategy = el.value; saveState(); return; }
+      if (el.id === 'cfg-games-per-player') { t.config.gamesPerPlayer = Number(el.value); saveState(); return; }
+      if (el.id === 'cfg-games-per-tie') { t.config.gamesPerTie = Number(el.value); saveState(); return; }
+      if (el.id === 'cfg-event-format') { t.config.eventFormat = el.value; saveState(); return; }
+
+      const act = el.dataset.action;
+      if (act === 'change-player-skill') {
+        const p = t.players.find((x) => x.id === el.dataset.pid);
+        if (p) { p.skill = el.value; saveState(); render(); }
+      } else if (act === 'score-tournament') {
+        const g = t.data.groups.find((x) => x.id === el.dataset.gid);
+        const m = g?.rounds[Number(el.dataset.ridx)]?.matches.find((x) => x.id === el.dataset.mid);
+        if (m) updateScore(m, el.dataset.side, el.value, t);
+      } else if (act === 'score-individual') {
+        const g = t.data.groups.find((x) => x.id === el.dataset.gid);
+        const m = g?.matches.find((x) => x.id === el.dataset.mid);
+        if (m) updateScore(m, el.dataset.side, el.value, t);
+      } else if (act === 'score-group') {
+        const tie = t.data.ties.find((x) => x.id === el.dataset.tid);
+        const m = tie?.matches.find((x) => x.id === el.dataset.mid);
+        if (m) updateScore(m, el.dataset.side, el.value, t);
+      } else if (act === 'score-event') {
+        const m = t.data.matches.find((x) => x.id === el.dataset.mid);
+        if (m) updateScore(m, el.dataset.side, el.value, t);
+      } else if (act === 'change-captain') {
+        const g = t.data.groups.find((x) => x.id === el.dataset.gid);
+        if (g) { g.captainId = el.value; saveState(); }
+      } else if (act === 'edit-lineup') {
+        const g = t.data.groups.find((x) => x.id === el.dataset.gid);
+        const slot = g?.lineup[Number(el.dataset.sidx)];
+        if (slot) {
+          slot[el.dataset.slot] = el.value || null;
+          g.lineupSubmitted = false;
+          syncGroupLineupToTies(t, g.id);
+          saveState();
+          render();
+        }
+      }
+    };
+
+    // Forms
+    const addForm = document.getElementById('add-player-form');
+    if (addForm && t) {
+      addForm.onsubmit = function (e) {
+        e.preventDefault();
+        const name = document.getElementById('p-name').value.trim();
+        if (!name) return;
+        const gender = document.getElementById('p-gender').value;
+        const skill = document.getElementById('p-skill').value;
+        t.players.push({ id: E.uid('p'), name, gender, skill, status: 'active' });
+        saveState();
+        render();
+        document.getElementById('p-name')?.focus();
+      };
+    }
+
+    const ntForm = document.getElementById('new-tournament-form');
+    if (ntForm) {
+      ntForm.onsubmit = function (e) {
+        e.preventDefault();
+        const name = document.getElementById('nt-name').value.trim() || '새 테니스 대회';
+        const type = document.getElementById('nt-type').value;
+        const teamMode = document.getElementById('nt-team-mode').value;
+        const withSample = document.getElementById('nt-sample').checked;
+        const newT = createTournamentObject({
+          name,
+          type,
+          players: withSample ? makeSampleRoster(8) : [],
+          config: { teamMode, groupCount: type === 'group' ? 2 : 1 },
+        });
+        state.tournaments.push(newT);
+        state.activeTournamentId = newT.id;
+        state.activeSection = 'roster';
+        state.modal = null;
+        saveState();
+        render();
+        toast(`"${name}" 대회가 생성되었습니다.`);
+      };
+    }
+
+    const meForm = document.getElementById('manual-event-form');
+    if (meForm && t) {
+      meForm.onsubmit = function (e) {
+        e.preventDefault();
+        const ids = ['me-a1', 'me-a2', 'me-b1', 'me-b2'].map((id) => document.getElementById(id).value);
+        const byId = {};
+        t.players.forEach((p) => (byId[p.id] = p));
+        if (!t.data) t.data = { matches: [], resting: [] };
+        t.data.matches.push({
+          id: E.uid('em'),
+          order: t.data.matches.length + 1,
+          formatLabel: document.getElementById('me-label').value.trim() || '이벤트',
+          teamA: {
+            players: [ids[0], ids[1]],
+            names: [byId[ids[0]]?.name || '', byId[ids[1]]?.name || ''],
+            label: `${byId[ids[0]]?.name || ''} / ${byId[ids[1]]?.name || ''}`,
+          },
+          teamB: {
+            players: [ids[2], ids[3]],
+            names: [byId[ids[2]]?.name || '', byId[ids[3]]?.name || ''],
+            label: `${byId[ids[2]]?.name || ''} / ${byId[ids[3]]?.name || ''}`,
+          },
+          scoreA: null,
+          scoreB: null,
+          status: 'pending',
+          note: '',
+        });
+        state.modal = null;
+        saveState();
+        render();
+        toast('즉석 이벤트 경기가 추가되었습니다.');
+      };
+    }
+
+    // Excel Dropzone drag & click
+    const dz = document.getElementById('excel-dropzone');
+    const fileInput = document.getElementById('excel-file-input');
+    if (dz && fileInput) {
+      dz.onclick = () => fileInput.click();
+      dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+      dz.ondragleave = () => dz.classList.remove('dragover');
+      dz.ondrop = (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileImport(e.dataTransfer.files[0]);
+        }
+      };
+    }
+  }
+
+  // --- Boot ---
+  loadState();
+  render();
+})();
+
+  </script>
+</body>
+</html>

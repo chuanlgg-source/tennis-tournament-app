@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">매치포인트 테니스</string>
+    <string name="title_activity_main">매치포인트 테니스</string>
+    <string name="package_name">com.matchpoint.tennis</string>
+    <string name="custom_url_scheme">com.matchpoint.tennis</string>
+</resources>

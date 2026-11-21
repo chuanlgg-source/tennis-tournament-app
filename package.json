@@ -1,0 +1,16 @@
+{
+  "name": "matchpoint-tennis-app",
+  "version": "1.0.0",
+  "description": "매치포인트 테니스 복식 대회 운영 매니저 Android & Web App",
+  "scripts": {
+    "build:web": "node -e \"const fs=require('fs'); fs.mkdirSync('www',{recursive:true}); ['index.html','styles.css','engine.js','app.js'].forEach(f=>fs.copyFileSync(f,'www/'+f));\"",
+    "cap:sync": "npm run build:web && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}

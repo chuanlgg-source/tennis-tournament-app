@@ -1,0 +1,8 @@
+{
+  "appId": "com.matchpoint.tennis",
+  "appName": "매치포인트 테니스",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
+}
